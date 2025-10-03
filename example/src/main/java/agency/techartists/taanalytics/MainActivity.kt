@@ -1,11 +1,14 @@
 package agency.techartists.taanalytics
 
 import agency.techartists.taanalytics.adaptor.LogcatAnalyticsAdaptor
-import agency.techartists.taanalytics.core.EventLogCondition
+import agency.techartists.taanalytics.compose.trackButtonTap
+import agency.techartists.taanalytics.compose.trackViewShow
 import agency.techartists.taanalytics.core.TAAnalytics
 import agency.techartists.taanalytics.core.TAAnalyticsConfig
+import agency.techartists.taanalytics.core.track
+import agency.techartists.taanalytics.models.AnalyticsViewFunnelStepDetails
 import agency.techartists.taanalytics.models.EventAnalyticsModel
-import agency.techartists.taanalytics.models.UserPropertyAnalyticsModel
+import agency.techartists.taanalytics.models.ViewAnalyticsModel
 import agency.techartists.taanalytics.models.toAnalyticsValue
 import agency.techartists.taanalytics.ui.theme.TAAnalyticsTheme
 import android.os.Bundle
@@ -14,15 +17,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -54,100 +60,106 @@ class MainActivity : ComponentActivity() {
             TAAnalyticsTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     ExampleScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        onEventClick = { trackExampleEvent() },
-                        onEventOncePerSessionClick = { trackExampleEvent(name = "once per session", EventLogCondition.LOG_ONLY_ONCE_PER_APP_SESSION) },
-                        onEventOncePerLifetimeClick = { trackExampleEvent(name = "once per lifetime", EventLogCondition.LOG_ONLY_ONCE_PER_LIFETIME) },
-                        onUserPropertyClick = { setExampleUserProperty() }
+                        analytics = analytics,
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
         }
     }
-
-    private fun trackExampleEvent(name: String = "example", logCondition: EventLogCondition = EventLogCondition.LOG_ALWAYS) {
-        // Track a custom event with parameters
-        analytics.track(
-            event = EventAnalyticsModel("button_clicked"),
-            params = mapOf(
-                "button_name" to name.toAnalyticsValue(),
-                "timestamp" to System.currentTimeMillis().toAnalyticsValue()
-            ),
-            logCondition = logCondition
-        )
-    }
-
-    private fun setExampleUserProperty() {
-        // Set a user property
-        analytics.set(
-            userProperty = UserPropertyAnalyticsModel("favorite_color"),
-            value = "blue"
-        )
-    }
 }
 
 @Composable
 fun ExampleScreen(
-    modifier: Modifier = Modifier,
-    onEventClick: () -> Unit,
-    onEventOncePerSessionClick: () -> Unit,
-    onEventOncePerLifetimeClick: () -> Unit,
-    onUserPropertyClick: () -> Unit
+    analytics: TAAnalytics,
+    modifier: Modifier = Modifier
 ) {
+    // Define view models for tracking
+    val homeView = ViewAnalyticsModel("home", type = "main")
+    val onboardingStep1 = ViewAnalyticsModel(
+        name = "onboarding_step_1",
+        type = "onboarding",
+        funnelStep = AnalyticsViewFunnelStepDetails(
+            funnelName = "onboarding",
+            step = 1,
+            isOptionalStep = false,
+            isFinalStep = false
+        )
+    )
+
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .trackViewShow(analytics, homeView), // Track view show automatically
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "TAAnalytics Example",
+            text = "TAAnalytics Phase 3 Demo",
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(16.dp)
         )
-
-        Button(
-            onClick = onEventClick,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Track Event")
-        }
-
-        Button(
-            onClick = onEventOncePerSessionClick,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Track Event Once Per Session")
-        }
-
-        Button(
-            onClick = onEventOncePerLifetimeClick,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Track Event Once Per Lifetime")
-        }
-
-        Button(
-            onClick = onUserPropertyClick,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Set User Property")
-        }
 
         Text(
-            text = "Check Logcat for analytics logs",
-            modifier = Modifier.padding(16.dp)
+            text = "UI Tracking with Compose",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun ExampleScreenPreview() {
-    TAAnalyticsTheme {
-        ExampleScreen(
-            onEventClick = {},
-            onEventOncePerSessionClick = {},
-            onEventOncePerLifetimeClick = {},
-            onUserPropertyClick = {}
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+        // Manual event tracking (Phase 1 & 2)
+        Button(
+            onClick = {
+                analytics.track(
+                    event = EventAnalyticsModel("custom_event"),
+                    params = mapOf("source" to "manual".toAnalyticsValue())
+                )
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text("Manual Event Track")
+        }
+
+        // Automatic button tracking with view context (Phase 3)
+        Button(
+            onClick = {
+                trackButtonTap(analytics, "subscribe", homeView, extra = "premium_plan")
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text("Subscribe (Tracked)")
+        }
+
+        // Button with list index
+        Button(
+            onClick = {
+                trackButtonTap(analytics, "select_item", homeView, index = 2)
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text("Item #3 (List Index)")
+        }
+
+        // Funnel step tracking
+        Button(
+            onClick = {
+                analytics.track(onboardingStep1)
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text("Track Onboarding Step")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "✅ View show tracked automatically\n" +
+                    "✅ Button taps with context\n" +
+                    "✅ Funnel step tracking\n" +
+                    "\nCheck Logcat (TAG: TAAnalytics)",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(16.dp)
         )
     }
 }
