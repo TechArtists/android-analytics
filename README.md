@@ -4,9 +4,13 @@ Android port of the iOS TAAnalytics library - an opinionated analytics framework
 
 ## Phase 1: Core Foundation ✅ COMPLETE
 
-The simplest working implementation is now available with the following features:
+The simplest working implementation with basic event tracking.
 
-### Implemented Components
+## Phase 2: Advanced Core Features ✅ COMPLETE
+
+Event buffering, app lifecycle tracking, and install detection are now implemented.
+
+### Phase 1 + 2 Implemented Components
 
 #### 1. **Models** (`taanalytics/src/main/java/agency/techartists/taanalytics/models/`)
 - ✅ `AnalyticsParameterValue.kt` - Type-safe parameter values (String, Int, Long, Double, Float, Boolean)
@@ -19,8 +23,15 @@ The simplest working implementation is now available with the following features
   - `set(userProperty, value)` - Set user properties
   - `get(userProperty)` - Get user properties from local storage
   - SharedPreferences integration for persistence
-- ✅ `TAAnalyticsConfig.kt` - Configuration with adaptors, prefixes, and filters
+  - **Phase 2**: Async adaptor initialization with timeout
+  - **Phase 2**: First open detection and tracking
+  - **Phase 2**: App version update detection
+  - **Phase 2**: OS version update detection
+  - **Phase 2**: Cold launch counting
+- ✅ `TAAnalyticsConfig.kt` - Configuration with adaptors, prefixes, filters, and install properties
 - ✅ `EventLogCondition.kt` - Enum for log frequency control
+- ✅ **Phase 2**: `EventBuffer.kt` - Queue events until adaptors are ready
+- ✅ **Phase 2**: `AppLifecycleObserver.kt` - Automatic APP_OPEN/APP_CLOSE tracking
 
 #### 3. **Adaptor System** (`taanalytics/src/main/java/agency/techartists/taanalytics/adaptor/`)
 - ✅ `AnalyticsAdaptor.kt` - Interface for analytics platform adaptors
@@ -28,6 +39,9 @@ The simplest working implementation is now available with the following features
 
 #### 4. **Constants** (`taanalytics/src/main/java/agency/techartists/taanalytics/constants/`)
 - ✅ `DefaultConstants.kt` - Standard event and user property definitions
+
+#### 5. **Utils** (`taanalytics/src/main/java/agency/techartists/taanalytics/utils/`)
+- ✅ **Phase 2**: `InstallUserPropertiesCalculator.kt` - Calculate device info at first open
 
 ### Usage Example
 
@@ -49,15 +63,9 @@ class MainActivity : ComponentActivity() {
         analytics = TAAnalytics(applicationContext, config)
 
         // 3. Start analytics
+        // Phase 2: First open, app lifecycle, and version updates are tracked automatically!
         lifecycleScope.launch {
             analytics.start()
-
-            // Track first open (only once ever)
-            analytics.track(
-                event = Events.OUR_FIRST_OPEN,
-                params = mapOf("source" to "onCreate".toAnalyticsValue()),
-                logCondition = EventLogCondition.LOG_ONLY_ONCE_PER_LIFETIME
-            )
         }
     }
 
@@ -84,14 +92,24 @@ class MainActivity : ComponentActivity() {
 
 ### Key Features
 
+**Phase 1:**
 ✅ **Type-safe event tracking** - Compile-time guarantees for event and property names
 ✅ **Log conditions** - Control frequency: always, once per lifetime, once per session
 ✅ **Multi-adaptor support** - Send events to multiple analytics platforms simultaneously
 ✅ **Event/property prefixing** - Separate prefixes for internal vs manual events
 ✅ **Event filtering** - Conditionally send events based on custom logic
 ✅ **SharedPreferences persistence** - Store user properties and log conditions locally
-✅ **Coroutines support** - Async adaptor initialization
 ✅ **Install type detection** - Automatically detect Play Store, Debug, or Release builds
+
+**Phase 2:**
+✅ **Event buffer** - Queue events during adaptor initialization, flush when ready
+✅ **Async adaptor initialization** - Initialize adaptors in parallel with configurable timeout
+✅ **App lifecycle tracking** - Automatic APP_OPEN/APP_CLOSE events via ProcessLifecycleOwner
+✅ **First open detection** - Automatically track first app open ever
+✅ **App version updates** - Detect and track version/build changes
+✅ **OS version updates** - Detect and track OS version changes
+✅ **Install user properties** - Capture device info at install time (date, version, OS, root status, UI theme)
+✅ **Cold launch counting** - Track number of cold launches
 
 ### Standard Events Included
 
@@ -124,13 +142,6 @@ class MainActivity : ComponentActivity() {
 
 ## Next Phases (Not Yet Implemented)
 
-### Phase 2: Advanced Core Features
-- Event buffer - Queue events until adaptors are ready
-- Async adaptor initialization with timeout
-- App lifecycle tracking - Automatic APP_OPEN/APP_CLOSE events
-- Install detection - Track first open, version updates
-- Install user properties - Capture device info at install
-
 ### Phase 3: UI Tracking & Compose Integration
 - UI protocol extensions
 - View analytics models
@@ -162,17 +173,19 @@ TAAnalytics
 
 ## Comparison with iOS Implementation
 
-| Feature | iOS | Android (Phase 1) |
-|---------|-----|-------------------|
-| Basic event tracking | ✅ | ✅ |
-| User properties | ✅ | ✅ |
-| Log conditions | ✅ | ✅ |
-| Multi-adaptor support | ✅ | ✅ |
-| Event/property prefixing | ✅ | ✅ |
-| Event filtering | ✅ | ✅ |
-| Event buffer | ✅ | ⏳ Phase 2 |
-| App lifecycle tracking | ✅ | ⏳ Phase 2 |
-| Install detection | ✅ | ⏳ Phase 2 |
+| Feature | iOS | Android |
+|---------|-----|---------|
+| Basic event tracking | ✅ | ✅ Phase 1 |
+| User properties | ✅ | ✅ Phase 1 |
+| Log conditions | ✅ | ✅ Phase 1 |
+| Multi-adaptor support | ✅ | ✅ Phase 1 |
+| Event/property prefixing | ✅ | ✅ Phase 1 |
+| Event filtering | ✅ | ✅ Phase 1 |
+| Event buffer | ✅ | ✅ Phase 2 |
+| App lifecycle tracking | ✅ | ✅ Phase 2 |
+| Install detection | ✅ | ✅ Phase 2 |
+| App/OS version updates | ✅ | ✅ Phase 2 |
+| Install user properties | ✅ | ✅ Phase 2 |
 | UI tracking | ✅ | ⏳ Phase 3 |
 | Stuck UI detection | ✅ | ⏳ Phase 4 |
 | Firebase adaptor | ✅ | ⏳ Phase 5 |

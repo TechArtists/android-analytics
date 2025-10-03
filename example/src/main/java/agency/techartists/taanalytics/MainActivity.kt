@@ -1,7 +1,6 @@
 package agency.techartists.taanalytics
 
 import agency.techartists.taanalytics.adaptor.LogcatAnalyticsAdaptor
-import agency.techartists.taanalytics.constants.Events
 import agency.techartists.taanalytics.core.EventLogCondition
 import agency.techartists.taanalytics.core.TAAnalytics
 import agency.techartists.taanalytics.core.TAAnalyticsConfig
@@ -45,17 +44,9 @@ class MainActivity : ComponentActivity() {
         analytics = TAAnalytics(applicationContext, config)
 
         // Start analytics in a coroutine
+        // First open, app lifecycle, version updates are all tracked automatically
         lifecycleScope.launch {
             analytics.start()
-
-            // Track first open (only once ever)
-            analytics.track(
-                event = Events.OUR_FIRST_OPEN,
-                params = mapOf(
-                    "source" to "onCreate".toAnalyticsValue()
-                ),
-                logCondition = EventLogCondition.LOG_ONLY_ONCE_PER_LIFETIME
-            )
         }
 
         enableEdgeToEdge()

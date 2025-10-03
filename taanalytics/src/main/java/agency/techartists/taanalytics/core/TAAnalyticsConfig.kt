@@ -24,8 +24,10 @@
 package agency.techartists.taanalytics.core
 
 import agency.techartists.taanalytics.adaptor.AnalyticsAdaptor
+import agency.techartists.taanalytics.constants.UserProperties
 import agency.techartists.taanalytics.models.EventAnalyticsModel
 import agency.techartists.taanalytics.models.AnalyticsBaseParameterValue
+import agency.techartists.taanalytics.models.UserPropertyAnalyticsModel
 import android.content.Context
 import android.content.SharedPreferences
 
@@ -37,6 +39,8 @@ import android.content.SharedPreferences
  *                         and communicated to the BI team.
  * @param adaptors List of analytics adaptors to use (Firebase, Amplitude, etc.)
  * @param sharedPreferences SharedPreferences instance to use for persistence
+ * @param installUserProperties List of user properties to calculate and set at first open
+ * @param maxTimeoutForAdaptorStart Maximum time in milliseconds to wait for each adaptor to start
  * @param automaticallyTrackedEventsPrefixConfig Prefix for events/user properties automatically
  *                                                tracked by this internal library
  * @param manuallyTrackedEventsPrefixConfig Prefix for events/user properties sent manually by
@@ -47,6 +51,14 @@ data class TAAnalyticsConfig(
     val analyticsVersion: String,
     val adaptors: List<AnalyticsAdaptor>,
     val sharedPreferences: SharedPreferences,
+    val installUserProperties: List<UserPropertyAnalyticsModel> = listOf(
+        UserProperties.INSTALL_DATE,
+        UserProperties.INSTALL_VERSION,
+        UserProperties.INSTALL_OS_VERSION,
+        UserProperties.INSTALL_IS_ROOTED,
+        UserProperties.INSTALL_UI_APPEARANCE
+    ),
+    val maxTimeoutForAdaptorStart: Long = 10000L,
     val automaticallyTrackedEventsPrefixConfig: PrefixConfig = PrefixConfig("", ""),
     val manuallyTrackedEventsPrefixConfig: PrefixConfig = PrefixConfig("", ""),
     val trackEventFilter: (EventAnalyticsModel, Map<String, AnalyticsBaseParameterValue>?) -> Boolean = { _, _ -> true }

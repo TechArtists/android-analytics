@@ -38,6 +38,10 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
 
+    // Lifecycle for app lifecycle tracking
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+
     // Coroutines for async operations
     implementation(libs.kotlinx.coroutines.android)
 
