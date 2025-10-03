@@ -5,7 +5,12 @@ import agency.techartists.taanalytics.compose.trackButtonTap
 import agency.techartists.taanalytics.compose.trackViewShow
 import agency.techartists.taanalytics.core.TAAnalytics
 import agency.techartists.taanalytics.core.TAAnalyticsConfig
+import agency.techartists.taanalytics.core.TAPermissionType
 import agency.techartists.taanalytics.core.track
+import agency.techartists.taanalytics.core.trackErrorEvent
+import agency.techartists.taanalytics.core.trackPermissionButtonTap
+import agency.techartists.taanalytics.core.trackPermissionScreenShow
+import agency.techartists.taanalytics.core.userID
 import agency.techartists.taanalytics.models.AnalyticsViewFunnelStepDetails
 import agency.techartists.taanalytics.models.EventAnalyticsModel
 import agency.techartists.taanalytics.models.ViewAnalyticsModel
@@ -153,10 +158,87 @@ fun ExampleScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+        Text(
+            text = "Phase 4: Advanced Features",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(8.dp)
+        )
+
+        // Error tracking
+        Button(
+            onClick = {
+                analytics.trackErrorEvent(
+                    reason = "demo_error",
+                    error = null,
+                    extraParams = mapOf("source" to "example_button".toAnalyticsValue())
+                )
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text("Track Error")
+        }
+
+        // Error tracking with exception
+        Button(
+            onClick = {
+                try {
+                    throw IllegalStateException("Demo exception")
+                } catch (e: Exception) {
+                    analytics.trackErrorEvent(
+                        reason = "caught_exception",
+                        error = e
+                    )
+                }
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text("Track Error with Exception")
+        }
+
+        // Permission tracking
+        Button(
+            onClick = {
+                analytics.trackPermissionScreenShow(TAPermissionType.PUSH_NOTIFICATIONS)
+                analytics.trackPermissionButtonTap(allowed = true, TAPermissionType.PUSH_NOTIFICATIONS)
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text("Track Permission (Allowed)")
+        }
+
+        // User ID
+        Button(
+            onClick = {
+                analytics.userID = "demo_user_123"
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text("Set User ID")
+        }
+
+        // Stuck UI (with 3s timeout)
+        Button(
+            onClick = {
+                val stuckView = ViewAnalyticsModel("stuck_demo", type = "loading")
+                analytics.track(stuckView, stuckTimeout = 3000L)
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text("Demo Stuck UI (3s)")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Text(
             text = "✅ View show tracked automatically\n" +
                     "✅ Button taps with context\n" +
                     "✅ Funnel step tracking\n" +
+                    "✅ Error tracking & correction\n" +
+                    "✅ Permission tracking\n" +
+                    "✅ User ID sync\n" +
+                    "✅ Stuck UI detection\n" +
                     "\nCheck Logcat (TAG: TAAnalytics)",
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(16.dp)

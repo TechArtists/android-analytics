@@ -61,6 +61,11 @@ class TAAnalytics(
     private var lifecycleObserver: AppLifecycleObserver? = null
 
     /**
+     * Manager for stuck UI detection. Tracks if a view is shown for too long.
+     */
+    internal var stuckUIManager: StuckUIManager? = null
+
+    /**
      * Events sent during this session that had the specific log condition of
      * [EventLogCondition.LOG_ONLY_ONCE_PER_APP_SESSION]
      */

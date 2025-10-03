@@ -87,3 +87,54 @@ interface AnalyticsAdaptor {
      */
     fun trim(userProperty: UserPropertyAnalyticsModel): UserPropertyAnalyticsModelTrimmed
 }
+
+/**
+ * Optional protocol for adaptors that provide a read-only user pseudo ID.
+ *
+ * This is typically an automatically generated ID by the analytics platform
+ * (e.g., Firebase App Instance ID).
+ */
+interface AnalyticsAdaptorWithReadOnlyUserPseudoID {
+    /**
+     * Get the platform-generated pseudo ID for the current user.
+     *
+     * @return The pseudo ID, or null if not available
+     */
+    fun getUserPseudoID(): String?
+}
+
+/**
+ * Optional protocol for adaptors that support setting a user ID (write-only).
+ *
+ * This is used for platforms like Crashlytics where you can set a user ID
+ * but cannot read it back.
+ */
+interface AnalyticsAdaptorWithWriteOnlyUserID {
+    /**
+     * Set the user ID for this analytics session.
+     *
+     * @param userID The user ID to set, or null to clear
+     */
+    fun setUserID(userID: String?)
+}
+
+/**
+ * Optional protocol for adaptors that support both reading and writing a user ID.
+ *
+ * This is used for platforms where you can both set and retrieve the user ID.
+ */
+interface AnalyticsAdaptorWithReadWriteUserID {
+    /**
+     * Set the user ID for this analytics session.
+     *
+     * @param userID The user ID to set, or null to clear
+     */
+    fun setUserID(userID: String?)
+
+    /**
+     * Get the current user ID.
+     *
+     * @return The user ID, or null if not set
+     */
+    fun getUserID(): String?
+}

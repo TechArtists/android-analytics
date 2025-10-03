@@ -53,6 +53,16 @@ fun TAAnalytics.track(view: ViewAnalyticsModel, stuckTimeout: Long? = null) {
     // Add view parameters
     addViewParameters(view, params, prefix = "")
 
+    // Cancel any existing stuck UI manager and track correction if needed
+    stuckUIManager?.trackCorrectedIfNeeded()
+    stuckUIManager?.cancel()
+    stuckUIManager = null
+
+    // Create new stuck UI manager if timeout specified
+    if (stuckTimeout != null && stuckTimeout > 0) {
+        stuckUIManager = StuckUIManager(params, stuckTimeout, this)
+    }
+
     // Update last view shown
     lastViewShow = view
     set(UserProperties.LAST_VIEW_SHOW, formatLastViewShow(view))
@@ -63,8 +73,6 @@ fun TAAnalytics.track(view: ViewAnalyticsModel, stuckTimeout: Long? = null) {
         params = params,
         logCondition = EventLogCondition.LOG_ALWAYS
     )
-
-    // TODO Phase 4: Handle stuck timeout if provided
 }
 
 /**

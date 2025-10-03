@@ -10,12 +10,22 @@ The simplest working implementation with basic event tracking.
 
 Event buffering, app lifecycle tracking, and install detection are now implemented.
 
-### Phase 1 + 2 Implemented Components
+## Phase 3: UI Tracking & Compose Integration ✅ COMPLETE
+
+Automatic UI event tracking with Jetpack Compose support.
+
+## Phase 4: Advanced Features & Error Tracking ✅ COMPLETE
+
+Stuck UI detection, error tracking, user ID synchronization, and permission tracking helpers.
+
+### Phase 1 + 2 + 3 + 4 Implemented Components
 
 #### 1. **Models** (`taanalytics/src/main/java/agency/techartists/taanalytics/models/`)
 - ✅ `AnalyticsParameterValue.kt` - Type-safe parameter values (String, Int, Long, Double, Float, Boolean)
 - ✅ `EventAnalyticsModel.kt` - Type-safe event name wrapper with internal/external flag
 - ✅ `UserPropertyAnalyticsModel.kt` - Type-safe user property name wrapper
+- ✅ **Phase 3**: `ViewAnalyticsModel.kt` - View/screen tracking with funnel support
+- ✅ **Phase 3**: `SecondaryViewAnalyticsModel.kt` - Transient UI elements (dialogs, popups)
 
 #### 2. **Core Analytics** (`taanalytics/src/main/java/agency/techartists/taanalytics/core/`)
 - ✅ `TAAnalytics.kt` - Main analytics class with:
@@ -28,13 +38,23 @@ Event buffering, app lifecycle tracking, and install detection are now implement
   - **Phase 2**: App version update detection
   - **Phase 2**: OS version update detection
   - **Phase 2**: Cold launch counting
+  - **Phase 4**: Stuck UI manager for timeout detection
 - ✅ `TAAnalyticsConfig.kt` - Configuration with adaptors, prefixes, filters, and install properties
 - ✅ `EventLogCondition.kt` - Enum for log frequency control
 - ✅ **Phase 2**: `EventBuffer.kt` - Queue events until adaptors are ready
 - ✅ **Phase 2**: `AppLifecycleObserver.kt` - Automatic APP_OPEN/APP_CLOSE tracking
+- ✅ **Phase 3**: `TAAnalytics+UI.kt` - UI tracking extension (view show, button tap, funnel tracking)
+- ✅ **Phase 4**: `TAAnalytics+Error.kt` - Error tracking extension
+- ✅ **Phase 4**: `TAAnalytics+Permission.kt` - Permission tracking helpers
+- ✅ **Phase 4**: `TAAnalytics+UserIDs.kt` - User ID synchronization
+- ✅ **Phase 4**: `StuckUIManager.kt` - Stuck UI detection with correction tracking
 
 #### 3. **Adaptor System** (`taanalytics/src/main/java/agency/techartists/taanalytics/adaptor/`)
 - ✅ `AnalyticsAdaptor.kt` - Interface for analytics platform adaptors
+- ✅ **Phase 4**: Optional adaptor protocols for user ID support:
+  - `AnalyticsAdaptorWithReadOnlyUserPseudoID` - Read platform-generated ID
+  - `AnalyticsAdaptorWithWriteOnlyUserID` - Set user ID (write-only)
+  - `AnalyticsAdaptorWithReadWriteUserID` - Both read and write user ID
 - ✅ `LogcatAnalyticsAdaptor.kt` - Simple implementation that logs to Logcat
 
 #### 4. **Constants** (`taanalytics/src/main/java/agency/techartists/taanalytics/constants/`)
@@ -42,6 +62,12 @@ Event buffering, app lifecycle tracking, and install detection are now implement
 
 #### 5. **Utils** (`taanalytics/src/main/java/agency/techartists/taanalytics/utils/`)
 - ✅ **Phase 2**: `InstallUserPropertiesCalculator.kt` - Calculate device info at first open
+
+#### 6. **Compose Integration** (`taanalytics/src/main/java/agency/techartists/taanalytics/compose/`)
+- ✅ **Phase 3**: `AnalyticsModifiers.kt` - Jetpack Compose modifiers and helpers:
+  - `Modifier.trackViewShow()` - Automatic view show tracking
+  - `trackButtonTap()` - Helper function for button tap tracking
+  - `Modifier.onFirstComposition()` - Run action on first composition
 
 ### Usage Example
 
@@ -111,6 +137,19 @@ class MainActivity : ComponentActivity() {
 ✅ **Install user properties** - Capture device info at install time (date, version, OS, root status, UI theme)
 ✅ **Cold launch counting** - Track number of cold launches
 
+**Phase 3:**
+✅ **View tracking** - ViewAnalyticsModel with funnel step support
+✅ **Secondary views** - Track transient UI (dialogs, popups, tooltips)
+✅ **Button tap tracking** - Context-aware button tracking with view info
+✅ **Compose modifiers** - Automatic tracking via Jetpack Compose modifiers
+✅ **Funnel tracking** - Multi-step user flow tracking with optional/final step flags
+
+**Phase 4:**
+✅ **Error tracking** - trackErrorEvent() and trackErrorCorrected() with exception details
+✅ **Stuck UI detection** - Automatic timeout detection with correction tracking
+✅ **User ID sync** - userID and userPseudoID properties synced across adaptors
+✅ **Permission tracking** - Standardized permission request tracking helpers
+
 ### Standard Events Included
 
 - `OUR_FIRST_OPEN` - First app open ever
@@ -140,19 +179,139 @@ class MainActivity : ComponentActivity() {
 3. Tap the buttons to track events
 4. Check Logcat with filter `TAAnalytics` to see the logs
 
+## Phase 3 Usage Examples
+
+### View Tracking with Compose
+
+```kotlin
+// Define a view model
+val homeView = ViewAnalyticsModel("home", type = "main")
+
+// Track view show automatically
+Column(
+    modifier = Modifier.trackViewShow(analytics, homeView)
+) {
+    // Your UI content
+}
+
+// Track funnel steps
+val onboardingStep1 = ViewAnalyticsModel(
+    name = "onboarding_step_1",
+    type = "onboarding",
+    funnelStep = AnalyticsViewFunnelStepDetails(
+        funnelName = "onboarding",
+        step = 1,
+        isOptionalStep = false,
+        isFinalStep = false
+    )
+)
+analytics.track(onboardingStep1)
+```
+
+### Button Tracking
+
+```kotlin
+Button(
+    onClick = {
+        trackButtonTap(analytics, "subscribe", homeView, extra = "premium")
+    }
+) {
+    Text("Subscribe")
+}
+
+// With list index (0-based, sent as 1-based "order")
+Button(
+    onClick = {
+        trackButtonTap(analytics, "select_item", homeView, index = 2) // order=3
+    }
+) {
+    Text("Item #3")
+}
+```
+
+## Phase 4 Usage Examples
+
+### Error Tracking
+
+```kotlin
+// Simple error
+analytics.trackErrorEvent(
+    reason = "network_timeout",
+    extraParams = mapOf("endpoint" to "/api/users".toAnalyticsValue())
+)
+
+// Error with exception
+try {
+    // Some operation
+} catch (e: Exception) {
+    analytics.trackErrorEvent(
+        reason = "payment_failed",
+        error = e,
+        extraParams = mapOf("amount" to 9.99.toAnalyticsValue())
+    )
+}
+
+// Track correction
+analytics.trackErrorCorrected(
+    reason = "network_timeout",
+    extraParams = mapOf("retry_count" to 3.toAnalyticsValue())
+)
+```
+
+### Stuck UI Detection
+
+```kotlin
+// Track a loading screen with 5-second timeout
+val loadingView = ViewAnalyticsModel("loading", type = "splash")
+analytics.track(loadingView, stuckTimeout = 5000L)
+
+// If view doesn't transition within 5s:
+// - Sends: error reason="stuck on ui_view_show", duration=5.0, view_name="loading", view_type="splash"
+//
+// If it transitions within 30s after stuck:
+// - Sends: error_corrected reason="stuck on ui_view_show", duration=<total_time>
+```
+
+### Permission Tracking
+
+```kotlin
+// Show permission request
+analytics.trackPermissionScreenShow(TAPermissionType.PUSH_NOTIFICATIONS)
+
+// Track user response
+analytics.trackPermissionButtonTap(
+    allowed = true,
+    TAPermissionType.PUSH_NOTIFICATIONS
+)
+
+// Track custom status
+analytics.trackPermissionButtonTap(
+    status = "already_granted",
+    TAPermissionType.LOCATION
+)
+
+// Custom permission type
+analytics.trackPermissionScreenShow("bluetooth")
+analytics.trackPermissionButtonTap(allowed = false, "bluetooth")
+```
+
+### User ID Synchronization
+
+```kotlin
+// Set user ID (propagated to all adaptors)
+analytics.userID = "user_12345"
+
+// Get user ID (from first read-write adaptor)
+val currentUserID = analytics.userID
+
+// Get platform pseudo ID (e.g., Firebase App Instance ID)
+val pseudoID = analytics.userPseudoID
+
+// Clear user ID
+analytics.userID = null
+```
+
 ## Next Phases (Not Yet Implemented)
-
-### Phase 3: UI Tracking & Compose Integration
-- UI protocol extensions
-- View analytics models
-- Compose modifiers for automatic tracking
-- Navigation integration
-
-### Phase 4: Advanced Features
-- Stuck UI detection
-- User ID synchronization
-- Permission tracking
-- Enhanced error tracking
 
 ### Phase 5: External Adaptors & Testing
 - Firebase Analytics adaptor
@@ -186,8 +345,14 @@ TAAnalytics
 | Install detection | ✅ | ✅ Phase 2 |
 | App/OS version updates | ✅ | ✅ Phase 2 |
 | Install user properties | ✅ | ✅ Phase 2 |
-| UI tracking | ✅ | ⏳ Phase 3 |
-| Stuck UI detection | ✅ | ⏳ Phase 4 |
+| UI tracking | ✅ | ✅ Phase 3 |
+| View/button tracking | ✅ | ✅ Phase 3 |
+| Funnel tracking | ✅ | ✅ Phase 3 |
+| Compose integration | ✅ | ✅ Phase 3 |
+| Error tracking | ✅ | ✅ Phase 4 |
+| Stuck UI detection | ✅ | ✅ Phase 4 |
+| Permission tracking | ✅ | ✅ Phase 4 |
+| User ID sync | ✅ | ✅ Phase 4 |
 | Firebase adaptor | ✅ | ⏳ Phase 5 |
 
 ## License
