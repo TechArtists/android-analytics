@@ -2,13 +2,13 @@
 agp = "8.13.0"
 firebaseBom = "34.3.0"
 kotlin = "2.2.20"
-coreKtx = "1.17.0"
+coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 kotlinxCoroutinesAndroid = "1.10.2"
 lifecycleRuntimeKtx = "2.9.4"
-activityCompose = "1.11.0"
+activityCompose = "1.9.2"
 composeBom = "2025.09.01"
 appcompat = "1.7.1"
 material = "1.13.0"
@@ -17,7 +17,7 @@ material = "1.13.0"
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleRuntimeKtx" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
-firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

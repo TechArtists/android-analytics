@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "agency.techartists.taanalytics"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "agency.techartists.taanalytics"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 

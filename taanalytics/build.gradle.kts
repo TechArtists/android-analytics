@@ -2,11 +2,12 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    `maven-publish`
 }
 
 android {
     namespace = "agency.techartists.taanalytics"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -34,6 +35,12 @@ android {
     buildFeatures {
         compose = true
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
 dependencies {
@@ -59,4 +66,39 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+
+                groupId = "agency.techartists"
+                artifactId = "taanalytics"
+                version = "0.1.0"
+
+                pom {
+                    name.set("TAAnalytics")
+                    description.set("Opinionated analytics framework wrapper for Android")
+                    url.set("https://github.com/techartists/android-analytics")
+
+                    licenses {
+                        license {
+                            name.set("MIT License")
+                            url.set("https://opensource.org/licenses/MIT")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id.set("techartists")
+                            name.set("Tech Artists Agency")
+                            email.set("hello@techartists.agency")
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
