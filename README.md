@@ -18,7 +18,11 @@ Automatic UI event tracking with Jetpack Compose support.
 
 Stuck UI detection, error tracking, user ID synchronization, and permission tracking helpers.
 
-### Phase 1 + 2 + 3 + 4 Implemented Components
+## Phase 5: Testing Infrastructure ✅ COMPLETE
+
+Mock analytics, test adaptors, and comprehensive testing documentation.
+
+### Phase 1 + 2 + 3 + 4 + 5 Implemented Components
 
 #### 1. **Models** (`taanalytics/src/main/java/agency/techartists/taanalytics/models/`)
 - ✅ `AnalyticsParameterValue.kt` - Type-safe parameter values (String, Int, Long, Double, Float, Boolean)
@@ -68,6 +72,11 @@ Stuck UI detection, error tracking, user ID synchronization, and permission trac
   - `Modifier.trackViewShow()` - Automatic view show tracking
   - `trackButtonTap()` - Helper function for button tap tracking
   - `Modifier.onFirstComposition()` - Run action on first composition
+
+#### 7. **Testing** (`taanalytics/src/test/java/agency/techartists/taanalytics/`)
+- ✅ **Phase 5**: `mock/MockTAAnalytics.kt` - Lightweight mock for unit testing
+- ✅ **Phase 5**: `mock/TestAnalyticsAdaptor.kt` - Test adaptor for event verification
+- ✅ **Phase 5**: `TESTING.md` - Comprehensive testing guide with examples
 
 ### Usage Example
 
@@ -149,6 +158,12 @@ class MainActivity : ComponentActivity() {
 ✅ **Stuck UI detection** - Automatic timeout detection with correction tracking
 ✅ **User ID sync** - userID and userPseudoID properties synced across adaptors
 ✅ **Permission tracking** - Standardized permission request tracking helpers
+
+**Phase 5:**
+✅ **Mock analytics** - MockTAAnalytics for simple unit testing
+✅ **Test adaptor** - TestAnalyticsAdaptor for integration testing
+✅ **Testing guide** - Comprehensive TESTING.md with examples
+✅ **Test dependencies** - JUnit, Coroutines Test configured
 
 ### Standard Events Included
 
@@ -311,13 +326,104 @@ val pseudoID = analytics.userPseudoID
 analytics.userID = null
 ```
 
-## Next Phases (Not Yet Implemented)
+### Running Tests
 
-### Phase 5: External Adaptors & Testing
-- Firebase Analytics adaptor
-- Testing infrastructure
-- Mock analytics
-- Unit test support
+```bash
+# Run all unit tests
+./gradlew test
+
+# Run tests for a specific module
+./gradlew :taanalytics:test
+./gradlew :firebase-adaptor:test
+
+# Run specific test class
+./gradlew test --tests "TAAnalyticsBasicTests"
+
+# Run tests with coverage
+./gradlew testDebugUnitTest jacocoTestReport
+```
+
+### Test Files
+
+The library includes comprehensive unit tests:
+
+- **TAAnalyticsBasicTests** (15 tests) - Core functionality: track, set, get, findEvents, clear, userID
+- **TAAnalyticsUITests** (12 tests) - UI tracking: view show, button tap, funnel steps
+- **TAAnalyticsErrorTests** (15 tests) - Error tracking and permission tracking
+
+Total: **42 unit tests** covering all major functionality.
+
+### Quick Start
+
+```kotlin
+import agency.techartists.taanalytics.mock.MockTAAnalytics
+import org.junit.Test
+import org.junit.Assert.*
+
+class MyFeatureTest {
+    @Test
+    fun `button click tracks event`() {
+        val mockAnalytics = MockTAAnalytics()
+        val feature = MyFeature(mockAnalytics)
+
+        feature.onButtonClicked()
+
+        assertEquals(1, mockAnalytics.eventsSent.size)
+        val (event, _) = mockAnalytics.eventsSent[0]
+        assertEquals("button_clicked", event.rawValue)
+    }
+}
+```
+
+## Firebase Analytics Adaptor
+
+Firebase Analytics integration is available in the `firebase-adaptor` module.
+
+See [firebase-adaptor/README.md](firebase-adaptor/README.md) for detailed setup instructions.
+
+### Quick Setup
+
+```kotlin
+import agency.techartists.taanalytics.firebase.FirebaseAnalyticsAdaptor
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
+
+// Get Firebase Analytics instance
+val firebaseAnalytics = Firebase.analytics
+
+// Create Firebase adaptor
+val firebaseAdaptor = FirebaseAnalyticsAdaptor(firebaseAnalytics)
+
+// Configure TAAnalytics with Firebase
+val config = TAAnalyticsConfig(
+    analyticsVersion = "1.0",
+    adaptors = listOf(firebaseAdaptor),
+    sharedPreferences = getSharedPreferences("TAAnalytics", MODE_PRIVATE)
+)
+
+val analytics = TAAnalytics(applicationContext, config)
+lifecycleScope.launch {
+    analytics.start()
+}
+```
+
+### Features
+
+- ✅ **Automatic Firebase limits handling** - Event names, user properties, and parameters automatically trimmed
+- ✅ **Type conversion** - TAAnalytics types converted to Firebase-compatible types
+- ✅ **User ID sync** - User IDs automatically propagated to Firebase
+- ✅ **Pseudo ID support** - Access Firebase App Instance ID via `analytics.userPseudoID`
+- ✅ **Multi-adaptor support** - Use Firebase alongside other analytics platforms
+
+## External Adaptors
+
+### Available
+- ✅ **Firebase Analytics** - `firebase-adaptor` module (included)
+
+### Future
+- Amplitude adaptor
+- MixPanel adaptor
+- Custom platform adaptors
 
 ## Architecture
 
@@ -326,7 +432,8 @@ TAAnalytics
     ├── Models (type-safe wrappers)
     ├── Core (main analytics class)
     ├── Adaptor (platform abstractions)
-    │   └── LogcatAnalyticsAdaptor
+    │   ├── LogcatAnalyticsAdaptor
+    │   └── FirebaseAnalyticsAdaptor (firebase-adaptor module)
     └── Constants (standard events/properties)
 ```
 
@@ -353,7 +460,9 @@ TAAnalytics
 | Stuck UI detection | ✅ | ✅ Phase 4 |
 | Permission tracking | ✅ | ✅ Phase 4 |
 | User ID sync | ✅ | ✅ Phase 4 |
-| Firebase adaptor | ✅ | ⏳ Phase 5 |
+| Mock analytics | ✅ | ✅ Phase 5 |
+| Test infrastructure | ✅ | ✅ Phase 5 |
+| Firebase adaptor | ✅ | ✅ Phase 5 |
 
 ## License
 
