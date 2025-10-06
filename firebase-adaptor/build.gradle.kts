@@ -39,8 +39,8 @@ dependencies {
     implementation(project(":taanalytics"))
 
     // Firebase Analytics
-    implementation(libs.firebase.bom)
-    implementation(libs.firebase.analytics.ktx)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
