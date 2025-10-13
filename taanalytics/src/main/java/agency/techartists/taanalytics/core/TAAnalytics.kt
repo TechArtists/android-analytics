@@ -58,6 +58,7 @@ class TAAnalytics(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val eventBuffer = EventBuffer()
+    private val userPropertyBuffer = UserPropertyBuffer()
     private var lifecycleObserver: AppLifecycleObserver? = null
 
     /**
@@ -118,7 +119,11 @@ class TAAnalytics(
         // Setup event buffer with started adaptors
         eventBuffer.setupAdaptors(startedAdaptors)
 
+        // Setup user property buffer with started adaptors
+        userPropertyBuffer.setupAdaptors(startedAdaptors)
+
         isStarted = true
+        Log.i(TAG, "TAAnalytics started successfully")
 
         // Set analytics version as user property
         set(UserProperties.ANALYTICS_VERSION, config.analyticsVersion)
@@ -310,11 +315,6 @@ class TAAnalytics(
      * @param value The value to set (null to unset)
      */
     fun set(userProperty: UserPropertyAnalyticsModel, value: String?) {
-        if (!isStarted) {
-            Log.w(TAG, "Attempted to set user property before start() was called")
-            return
-        }
-
         val prefixedUserProperty = prefixUserPropertyIfNeeded(userProperty)
 
         // Save to SharedPreferences
@@ -325,14 +325,8 @@ class TAAnalytics(
             config.sharedPreferences.edit { remove(key) }
         }
 
-        // Set in all started adaptors
-        eventBuffer.getStartedAdaptors().forEach { adaptor ->
-            try {
-                adaptor.set(adaptor.trim(prefixedUserProperty), value)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error setting user property in ${adaptor::class.simpleName}: ${e.message}", e)
-            }
-        }
+        // Set in adaptors (will queue if not ready, or apply immediately if ready)
+        userPropertyBuffer.setProperty(prefixedUserProperty, value)
     }
 
     /**
