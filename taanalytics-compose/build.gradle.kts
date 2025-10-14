@@ -1,11 +1,12 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     `maven-publish`
 }
 
 android {
-    namespace = "agency.techartists.taanalytics"
+    namespace = "agency.techartists.taanalytics.compose"
     compileSdk = 35
 
     defaultConfig {
@@ -31,6 +32,9 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    buildFeatures {
+        compose = true
+    }
 
     publishing {
         singleVariant("release") {
@@ -40,21 +44,16 @@ android {
 }
 
 dependencies {
+    // Core analytics library
+    api(project(":taanalytics"))
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-
-    // Lifecycle for app lifecycle tracking
-    implementation(libs.androidx.lifecycle.process)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-
-    // Coroutines for async operations
-    implementation(libs.kotlinx.coroutines.android)
+    // Jetpack Compose
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.material3)
 
     // Testing
     testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
@@ -66,12 +65,12 @@ afterEvaluate {
                 from(components["release"])
 
                 groupId = "agency.techartists"
-                artifactId = "taanalytics"
+                artifactId = "taanalytics-compose"
                 version = "0.1.0"
 
                 pom {
-                    name.set("TAAnalytics")
-                    description.set("Opinionated analytics framework wrapper for Android")
+                    name.set("TAAnalytics Compose")
+                    description.set("Jetpack Compose extensions for TAAnalytics")
                     url.set("https://github.com/techartists/android-analytics")
 
                     licenses {

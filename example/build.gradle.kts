@@ -42,6 +42,7 @@ android {
 dependencies {
     // TAAnalytics library
     implementation(project(":taanalytics"))
+    implementation(project(":taanalytics-compose"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

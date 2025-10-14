@@ -22,4 +22,5 @@ dependencyResolutionManagement {
 rootProject.name = "TAAnalytics"
 include(":example")
 include(":taanalytics")
+include(":taanalytics-compose")
 include(":firebase-adaptor")
