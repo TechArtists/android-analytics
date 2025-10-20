@@ -21,15 +21,19 @@
  *
  */
 
-package agency.techartists.taanalytics.ui.theme
+package agency.techartists.taanalytics
 
-import androidx.compose.ui.graphics.Color
-
-// iOS-inspired blue theme
-val Blue80 = Color(0xFF64B5F6) // Light blue
-val BlueGrey80 = Color(0xFF90CAF9)
-val LightBlue80 = Color(0xFFBBDEFB)
-
-val Blue40 = Color(0xFF1976D2) // Deep blue
-val BlueGrey40 = Color(0xFF1565C0)
-val LightBlue40 = Color(0xFF42A5F5)
+/**
+ * Navigation routes for the app
+ */
+sealed class Route(val route: String) {
+    data object CreateAccount : Route("create_account")
+    data object ContactsPermission : Route("contacts_permission")
+    data object ContactsList : Route("contacts_list")
+    data class ContactDetail(val contactId: String) : Route("contact_detail/$contactId") {
+        companion object {
+            const val routeWithArg = "contact_detail/{contactId}"
+            const val arg = "contactId"
+        }
+    }
+}

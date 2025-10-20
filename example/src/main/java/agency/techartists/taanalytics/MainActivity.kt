@@ -23,251 +23,132 @@
 
 package agency.techartists.taanalytics
 
-import agency.techartists.taanalytics.adaptor.LogcatAnalyticsAdaptor
-import agency.techartists.taanalytics.compose.trackButtonTap
-import agency.techartists.taanalytics.compose.trackViewShow
-import agency.techartists.taanalytics.core.TAAnalytics
-import agency.techartists.taanalytics.core.TAAnalyticsConfig
-import agency.techartists.taanalytics.core.TAPermissionType
-import agency.techartists.taanalytics.core.track
-import agency.techartists.taanalytics.core.trackErrorEvent
-import agency.techartists.taanalytics.core.trackPermissionButtonTap
-import agency.techartists.taanalytics.core.trackPermissionScreenShow
-import agency.techartists.taanalytics.core.userID
-import agency.techartists.taanalytics.models.AnalyticsViewFunnelStepDetails
-import agency.techartists.taanalytics.models.EventAnalyticsModel
-import agency.techartists.taanalytics.models.ViewAnalyticsModel
-import agency.techartists.taanalytics.models.toAnalyticsValue
+import agency.techartists.taanalytics.ui.screens.ContactDetailScreen
+import agency.techartists.taanalytics.ui.screens.ContactsListScreen
+import agency.techartists.taanalytics.ui.screens.ContactsPermissionScreen
+import agency.techartists.taanalytics.ui.screens.CreateAccountScreen
 import agency.techartists.taanalytics.ui.theme.TAAnalyticsTheme
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
-
-    private lateinit var analytics: TAAnalytics
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize TAAnalytics
-        val config = TAAnalyticsConfig(
-            analyticsVersion = "1.0",
-            adaptors = listOf(LogcatAnalyticsAdaptor()),
-            sharedPreferences = getSharedPreferences("TAAnalyticsExample", MODE_PRIVATE)
-        )
-
-        analytics = TAAnalytics(applicationContext, config)
-
-        // Start analytics in a coroutine
-        // First open, app lifecycle, version updates are all tracked automatically
-        lifecycleScope.launch {
-            analytics.start()
-        }
+        val app = application as AnalyticsExampleApp
+        val analytics = app.analytics
 
         enableEdgeToEdge()
         setContent {
             TAAnalyticsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ExampleScreen(
-                        analytics = analytics,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                MainScreen(analytics = analytics)
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExampleScreen(
-    analytics: TAAnalytics,
-    modifier: Modifier = Modifier
-) {
-    // Define view models for tracking
-    val homeView = ViewAnalyticsModel("home", type = "main")
-    val onboardingStep1 = ViewAnalyticsModel(
-        name = "onboarding_step_1",
-        type = "onboarding",
-        funnelStep = AnalyticsViewFunnelStepDetails(
-            funnelName = "onboarding",
-            step = 1,
-            isOptionalStep = false,
-            isFinalStep = false
-        )
-    )
+fun MainScreen(analytics: agency.techartists.taanalytics.core.TAAnalytics) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .trackViewShow(analytics, homeView), // Track view show automatically
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "TAAnalytics Phase 3 Demo",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        Text(
-            text = "UI Tracking with Compose",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-        // Manual event tracking (Phase 1 & 2)
-        Button(
-            onClick = {
-                analytics.track(
-                    event = EventAnalyticsModel("custom_event"),
-                    params = mapOf("source" to "manual".toAnalyticsValue())
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            if (currentRoute != Route.CreateAccount.route) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            when (currentRoute) {
+                                Route.ContactsPermission.route -> "Contacts"
+                                Route.ContactsList.route -> "Contacts"
+                                else -> if (currentRoute?.startsWith("contact_detail") == true) {
+                                    "Contact Detail"
+                                } else {
+                                    "TAAnalytics Demo"
+                                }
+                            }
+                        )
+                    },
+                    navigationIcon = {
+                        if (currentRoute == Route.ContactDetail.routeWithArg) {
+                            IconButton(onClick = { navController.navigateUp() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
+                        }
+                    }
                 )
-            },
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Manual Event Track")
+            }
         }
-
-        // Automatic button tracking with view context (Phase 3)
-        Button(
-            onClick = {
-                trackButtonTap(analytics, "subscribe", homeView, extra = "premium_plan")
-            },
-            modifier = Modifier.padding(8.dp)
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Route.CreateAccount.route,
+            modifier = Modifier.padding(innerPadding)
         ) {
-            Text("Subscribe (Tracked)")
-        }
-
-        // Button with list index
-        Button(
-            onClick = {
-                trackButtonTap(analytics, "select_item", homeView, index = 2)
-            },
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Item #3 (List Index)")
-        }
-
-        // Funnel step tracking
-        Button(
-            onClick = {
-                analytics.track(onboardingStep1)
-            },
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Track Onboarding Step")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-        Text(
-            text = "Phase 4: Advanced Features",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(8.dp)
-        )
-
-        // Error tracking
-        Button(
-            onClick = {
-                analytics.trackErrorEvent(
-                    reason = "demo_error",
-                    error = null,
-                    extraParams = mapOf("source" to "example_button".toAnalyticsValue())
+            composable(Route.CreateAccount.route) {
+                CreateAccountScreen(
+                    analytics = analytics,
+                    onAccountCreated = {
+                        navController.navigate(Route.ContactsPermission.route) {
+                            popUpTo(Route.CreateAccount.route) { inclusive = true }
+                        }
+                    }
                 )
-            },
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Track Error")
+            }
+
+            composable(Route.ContactsPermission.route) {
+                ContactsPermissionScreen(
+                    analytics = analytics,
+                    onPermissionGranted = {
+                        navController.navigate(Route.ContactsList.route) {
+                            popUpTo(Route.ContactsPermission.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(Route.ContactsList.route) {
+                ContactsListScreen(
+                    analytics = analytics,
+                    navController = navController
+                )
+            }
+
+            composable(
+                route = Route.ContactDetail.routeWithArg,
+                arguments = listOf(
+                    navArgument(Route.ContactDetail.arg) { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val contactId = backStackEntry.arguments?.getString(Route.ContactDetail.arg) ?: ""
+                ContactDetailScreen(
+                    analytics = analytics,
+                    contactId = contactId
+                )
+            }
         }
-
-        // Error tracking with exception
-        Button(
-            onClick = {
-                try {
-                    throw IllegalStateException("Demo exception")
-                } catch (e: Exception) {
-                    analytics.trackErrorEvent(
-                        reason = "caught_exception",
-                        error = e
-                    )
-                }
-            },
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Track Error with Exception")
-        }
-
-        // Permission tracking
-        Button(
-            onClick = {
-                analytics.trackPermissionScreenShow(TAPermissionType.PUSH_NOTIFICATIONS)
-                analytics.trackPermissionButtonTap(allowed = true, TAPermissionType.PUSH_NOTIFICATIONS)
-            },
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Track Permission (Allowed)")
-        }
-
-        // User ID
-        Button(
-            onClick = {
-                analytics.userID = "demo_user_123"
-            },
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Set User ID")
-        }
-
-        // Stuck UI (with 3s timeout)
-        Button(
-            onClick = {
-                val stuckView = ViewAnalyticsModel("stuck_demo", type = "loading")
-                analytics.track(stuckView, stuckTimeout = 3000L)
-            },
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Demo Stuck UI (3s)")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "✅ View show tracked automatically\n" +
-                    "✅ Button taps with context\n" +
-                    "✅ Funnel step tracking\n" +
-                    "✅ Error tracking & correction\n" +
-                    "✅ Permission tracking\n" +
-                    "✅ User ID sync\n" +
-                    "✅ Stuck UI detection\n" +
-                    "\nCheck Logcat (TAG: TAAnalytics)",
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(16.dp)
-        )
     }
 }
