@@ -1,215 +1,183 @@
 # TAAnalytics for Android
 
-Android port of the iOS TAAnalytics library - an opinionated analytics framework wrapper that abstracts underlying analytics platforms.
+An opinionated analytics framework wrapper that abstracts underlying analytics platforms (Firebase, MixPanel, etc.) while providing several key benefits:
 
-## Phase 1: Core Foundation ✅ COMPLETE
+1. **Opinionated event structure** - Standardized event naming instead of ad-hoc names like `foo_clicked`, `tap_bar`, `baz`
+2. **Multi-adaptor support** - Send events to multiple analytics platforms simultaneously with a unified interface
+3. **Built-in validation** - Checks and workarounds for common implementation bugs:
+   - Automatic trimming of event names & property keys/values
+   - Warning for reserved event names
+   - Type validation to prevent unsupported parameter types
 
-The simplest working implementation with basic event tracking.
+## Analytics Adaptors
 
-## Phase 2: Advanced Core Features ✅ COMPLETE
+When initializing `TAAnalytics`, pass an array of adaptors that consume events and user property changes. These adaptors forward data to underlying analytics platforms.
 
-Event buffering, app lifecycle tracking, and install detection are now implemented.
+Adaptors implement the `AnalyticsAdaptor` interface with mechanisms for platform-specific character limits, type conversions, and more.
 
-## Phase 3: UI Tracking & Compose Integration ✅ COMPLETE
+### Available Adaptors
 
-Automatic UI event tracking with Jetpack Compose support.
+| Adaptor Name | Details | Location |
+| --- | --- | --- |
+| LogcatAnalyticsAdaptor | Log events to Android Logcat | Inside this library |
+| FirebaseAnalyticsAdaptor | https://firebase.google.com | `firebase-adaptor` module |
+| MixPanelAnalyticsAdaptor | https://mixpanel.com | `mixpanel-adaptor` module |
+| AppsFlyerAnalyticsAdaptor | https://appsflyer.com | `appsflyer-adaptor` module |
 
-## Phase 4: Advanced Features & Error Tracking ✅ COMPLETE
+### Future Adaptors
+- Amplitude
+- Heap
+- Segment
+- Adjust
 
-Stuck UI detection, error tracking, user ID synchronization, and permission tracking helpers.
-
-## Phase 5: Testing Infrastructure ✅ COMPLETE
-
-Mock analytics, test adaptors, and comprehensive testing documentation.
-
-### Phase 1 + 2 + 3 + 4 + 5 Implemented Components
-
-#### 1. **Models** (`taanalytics/src/main/java/agency/techartists/taanalytics/models/`)
-- ✅ `AnalyticsParameterValue.kt` - Type-safe parameter values (String, Int, Long, Double, Float, Boolean)
-- ✅ `EventAnalyticsModel.kt` - Type-safe event name wrapper with internal/external flag
-- ✅ `UserPropertyAnalyticsModel.kt` - Type-safe user property name wrapper
-- ✅ **Phase 3**: `ViewAnalyticsModel.kt` - View/screen tracking with funnel support
-- ✅ **Phase 3**: `SecondaryViewAnalyticsModel.kt` - Transient UI elements (dialogs, popups)
-
-#### 2. **Core Analytics** (`taanalytics/src/main/java/agency/techartists/taanalytics/core/`)
-- ✅ `TAAnalytics.kt` - Main analytics class with:
-  - `track(event, params, logCondition)` - Track events
-  - `set(userProperty, value)` - Set user properties
-  - `get(userProperty)` - Get user properties from local storage
-  - SharedPreferences integration for persistence
-  - **Phase 2**: Async adaptor initialization with timeout
-  - **Phase 2**: First open detection and tracking
-  - **Phase 2**: App version update detection
-  - **Phase 2**: OS version update detection
-  - **Phase 2**: Cold launch counting
-  - **Phase 4**: Stuck UI manager for timeout detection
-- ✅ `TAAnalyticsConfig.kt` - Configuration with adaptors, prefixes, filters, and install properties
-- ✅ `EventLogCondition.kt` - Enum for log frequency control
-- ✅ **Phase 2**: `EventBuffer.kt` - Queue events until adaptors are ready
-- ✅ **Phase 2**: `AppLifecycleObserver.kt` - Automatic APP_OPEN/APP_CLOSE tracking
-- ✅ **Phase 3**: `TAAnalytics+UI.kt` - UI tracking extension (view show, button tap, funnel tracking)
-- ✅ **Phase 4**: `TAAnalytics+Error.kt` - Error tracking extension
-- ✅ **Phase 4**: `TAAnalytics+Permission.kt` - Permission tracking helpers
-- ✅ **Phase 4**: `TAAnalytics+UserIDs.kt` - User ID synchronization
-- ✅ **Phase 4**: `StuckUIManager.kt` - Stuck UI detection with correction tracking
-
-#### 3. **Adaptor System** (`taanalytics/src/main/java/agency/techartists/taanalytics/adaptor/`)
-- ✅ `AnalyticsAdaptor.kt` - Interface for analytics platform adaptors
-- ✅ **Phase 4**: Optional adaptor protocols for user ID support:
-  - `AnalyticsAdaptorWithReadOnlyUserPseudoID` - Read platform-generated ID
-  - `AnalyticsAdaptorWithWriteOnlyUserID` - Set user ID (write-only)
-  - `AnalyticsAdaptorWithReadWriteUserID` - Both read and write user ID
-- ✅ `LogcatAnalyticsAdaptor.kt` - Simple implementation that logs to Logcat
-
-#### 4. **Constants** (`taanalytics/src/main/java/agency/techartists/taanalytics/constants/`)
-- ✅ `DefaultConstants.kt` - Standard event and user property definitions
-
-#### 5. **Utils** (`taanalytics/src/main/java/agency/techartists/taanalytics/utils/`)
-- ✅ **Phase 2**: `InstallUserPropertiesCalculator.kt` - Calculate device info at first open
-
-#### 6. **Compose Integration** (`taanalytics/src/main/java/agency/techartists/taanalytics/compose/`)
-- ✅ **Phase 3**: `AnalyticsModifiers.kt` - Jetpack Compose modifiers and helpers:
-  - `Modifier.trackViewShow()` - Automatic view show tracking
-  - `trackButtonTap()` - Helper function for button tap tracking
-  - `Modifier.onFirstComposition()` - Run action on first composition
-
-#### 7. **Testing** (`taanalytics/src/test/java/agency/techartists/taanalytics/`)
-- ✅ **Phase 5**: `mock/MockTAAnalytics.kt` - Lightweight mock for unit testing
-- ✅ **Phase 5**: `mock/TestAnalyticsAdaptor.kt` - Test adaptor for event verification
-- ✅ **Phase 5**: `TESTING.md` - Comprehensive testing guide with examples
-
-### Usage Example
+### Multi-Adaptor Example
 
 ```kotlin
-class MainActivity : ComponentActivity() {
-    private lateinit var analytics: TAAnalytics
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // 1. Configure TAAnalytics
-        val config = TAAnalyticsConfig(
-            analyticsVersion = "1.0",
-            adaptors = listOf(LogcatAnalyticsAdaptor()),
-            sharedPreferences = getSharedPreferences("TAAnalytics", MODE_PRIVATE)
-        )
-
-        // 2. Initialize analytics
-        analytics = TAAnalytics(applicationContext, config)
-
-        // 3. Start analytics
-        // Phase 2: First open, app lifecycle, and version updates are tracked automatically!
-        lifecycleScope.launch {
-            analytics.start()
-        }
-    }
-
-    private fun trackCustomEvent() {
-        // Track custom event with parameters
-        analytics.track(
-            event = EventAnalyticsModel("button_clicked"),
-            params = mapOf(
-                "button_name" to "submit".toAnalyticsValue(),
-                "count" to 1.toAnalyticsValue()
+val analytics = TAAnalytics(
+    context = applicationContext,
+    config = TAAnalyticsConfig(
+        analyticsVersion = "1.0",
+        adaptors = listOf(
+          LogcatAnalyticsAdaptor(),
+          FirebaseAnalyticsAdaptor(Firebase.analytics),
+          MixpanelAnalyticsAdaptor(
+            MixpanelAPI.getInstance(
+              applicationContext,
+              "YOUR_KEY_HERE",
+              true
             )
-        )
-    }
+          ),
+          AppsFlyerAnalyticsAdaptor(
+            applicationContext,
+            AppsFlyerLib.getInstance()
+          )
+        ),
+        sharedPreferences = getSharedPreferences("TAAnalytics", MODE_PRIVATE)
+    )
+)
 
-    private fun setUserProperty() {
-        // Set a user property
-        analytics.set(
-            userProperty = UserPropertyAnalyticsModel("user_tier"),
-            value = "premium"
-        )
-    }
+lifecycleScope.launch {
+    analytics.start()
+}
+
+// Track events
+analytics.track(EventAnalyticsModel.FIRST_OPEN)
+analytics.track(EventAnalyticsModel.PURCHASE, mapOf(
+    "product_id" to "premium_yearly".toAnalyticsValue(),
+    "price" to 99.99.toAnalyticsValue()
+))
+```
+
+## Event Structure
+
+Use custom events or leverage predefined standard events. Using common events across apps makes cross-app analysis easier for data teams.
+
+### Custom Events
+
+`EventAnalyticsModel` models all events, and `AnalyticsBaseParameterValue` provides compile-time guarantees that parameters will reach the underlying platform.
+
+The main tracking function:
+```kotlin
+fun track(
+    event: EventAnalyticsModel,
+    params: Map<String, AnalyticsBaseParameterValue>? = null,
+    logCondition: EventLogCondition = EventLogCondition.LOG_ALWAYS
+)
+```
+
+`EventLogCondition` controls frequency:
+- `LOG_ALWAYS` - Send every time
+- `LOG_ONLY_ONCE_PER_APP_SESSION` - Once per cold launch
+- `LOG_ONLY_ONCE_PER_LIFETIME` - Only first time ever
+
+Example:
+```kotlin
+// Define custom events
+object CustomEvents {
+    val MY_FIRST_OPEN = EventAnalyticsModel("my_first_open")
+    val MY_COLD_APP_LAUNCH = EventAnalyticsModel("my_cold_app_launch")
+    val MY_APP_FOREGROUND = EventAnalyticsModel("my_app_foreground")
+}
+
+// In your Activity/ViewModel
+fun onAppForeground() {
+    // Sent every foreground
+    analytics.track(CustomEvents.MY_APP_FOREGROUND, mapOf("hello" to "world".toAnalyticsValue()))
+
+    // Sent once per app session
+    analytics.track(CustomEvents.MY_COLD_APP_LAUNCH, logCondition = EventLogCondition.LOG_ONLY_ONCE_PER_APP_SESSION)
+
+    // Sent once per lifetime
+    analytics.track(CustomEvents.MY_FIRST_OPEN, logCondition = EventLogCondition.LOG_ONLY_ONCE_PER_LIFETIME)
 }
 ```
 
-### Key Features
+### Custom User Properties
 
-**Phase 1:**
-✅ **Type-safe event tracking** - Compile-time guarantees for event and property names
-✅ **Log conditions** - Control frequency: always, once per lifetime, once per session
-✅ **Multi-adaptor support** - Send events to multiple analytics platforms simultaneously
-✅ **Event/property prefixing** - Separate prefixes for internal vs manual events
-✅ **Event filtering** - Conditionally send events based on custom logic
-✅ **SharedPreferences persistence** - Store user properties and log conditions locally
-✅ **Install type detection** - Automatically detect Play Store, Debug, or Release builds
-
-**Phase 2:**
-✅ **Event buffer** - Queue events during adaptor initialization, flush when ready
-✅ **Async adaptor initialization** - Initialize adaptors in parallel with configurable timeout
-✅ **App lifecycle tracking** - Automatic APP_OPEN/APP_CLOSE events via ProcessLifecycleOwner
-✅ **First open detection** - Automatically track first app open ever
-✅ **App version updates** - Detect and track version/build changes
-✅ **OS version updates** - Detect and track OS version changes
-✅ **Install user properties** - Capture device info at install time (date, version, OS, root status, UI theme)
-✅ **Cold launch counting** - Track number of cold launches
-
-**Phase 3:**
-✅ **View tracking** - ViewAnalyticsModel with funnel step support
-✅ **Secondary views** - Track transient UI (dialogs, popups, tooltips)
-✅ **Button tap tracking** - Context-aware button tracking with view info
-✅ **Compose modifiers** - Automatic tracking via Jetpack Compose modifiers
-✅ **Funnel tracking** - Multi-step user flow tracking with optional/final step flags
-
-**Phase 4:**
-✅ **Error tracking** - trackErrorEvent() and trackErrorCorrected() with exception details
-✅ **Stuck UI detection** - Automatic timeout detection with correction tracking
-✅ **User ID sync** - userID and userPseudoID properties synced across adaptors
-✅ **Permission tracking** - Standardized permission request tracking helpers
-
-**Phase 5:**
-✅ **Mock analytics** - MockTAAnalytics for simple unit testing
-✅ **Test adaptor** - TestAnalyticsAdaptor for integration testing
-✅ **Testing guide** - Comprehensive TESTING.md with examples
-✅ **Test dependencies** - JUnit, Coroutines Test configured
-
-### Standard Events Included
-
-- `OUR_FIRST_OPEN` - First app open ever
-- `UI_VIEW_SHOW` - Generic view shown
-- `UI_BUTTON_TAP` - Generic button tap
-- `APP_OPEN` / `APP_CLOSE` - App lifecycle
-- `ERROR` / `ERROR_CORRECTED` - Error tracking
-- `APP_VERSION_UPDATE` / `OS_VERSION_UPDATE` - Version changes
-- `ENGAGEMENT` / `ENGAGEMENT_PRIMARY` - User engagement
-- `ONBOARDING_ENTER` / `ONBOARDING_EXIT` - Onboarding flow
-- `PAYWALL_*` - Paywall events
-- `SUBSCRIPTION_*` - Subscription events
-
-### Standard User Properties Included
-
-- `ANALYTICS_VERSION` - Analytics schema version
-- `INSTALL_DATE` / `INSTALL_VERSION` / `INSTALL_OS_VERSION` - Install-time data
-- `INSTALL_IS_ROOTED` - Root detection at install
-- `APP_COLD_LAUNCH_COUNT` / `APP_OPEN_COUNT` - Usage counters
-- `SUBSCRIPTION` / `SUBSCRIPTION_INTRO_OFFER` - Subscription data
-- `LAST_VIEW_SHOW` - Last viewed screen
-
-## Running the Example
-
-1. Open the project in Android Studio
-2. Run the `example` module
-3. Tap the buttons to track events
-4. Check Logcat with filter `TAAnalytics` to see the logs
-
-## Phase 3 Usage Examples
-
-### View Tracking with Compose
+`UserPropertyAnalyticsModel` models user properties with automatic length validation:
 
 ```kotlin
-// Define a view model
-val homeView = ViewAnalyticsModel("home", type = "main")
+object CustomProperties {
+    val FAVORITE_SPORTS_TEAM = UserPropertyAnalyticsModel("favorite_sports_team")
+}
 
-// Track view show automatically
+analytics.set(CustomProperties.FAVORITE_SPORTS_TEAM, "Mars")
+```
+
+User properties are also saved to SharedPreferences for runtime access:
+```kotlin
+val team = analytics.get(CustomProperties.FAVORITE_SPORTS_TEAM)
+```
+
+## Standard Events
+
+### UI Interactions
+
+Instead of many events like `foo_clicked`, `shown_bar`, this library uses 2 generic events with rich parameters:
+
+#### `ui_view_show`
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `name` | String | View name |
+| `type` | String? | View type/state (e.g., "no_permissions") |
+| `funnel_name` | String? | Business funnel name (e.g., "onboarding") |
+| `funnel_step` | Int? | Step index in funnel |
+| `funnel_step_is_optional` | Boolean? | If step can be skipped |
+| `funnel_step_is_final` | Boolean? | If this is the last step |
+| `secondary_name` | String? | Transient UI name (popup, label) |
+| `secondary_type` | String? | Transient UI type |
+
+#### `ui_button_tap`
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `name` | String | Symbolic button name (not localized text) |
+| `extra` | String? | Additional context |
+| `order` | Int? | Button order in list (1-based) |
+| `view_name` | String | Parent view name |
+| `view_type` | String? | Parent view type |
+| `funnel_*` | Various | Same funnel params as view |
+| `secondary_view_*` | String? | If tapped on secondary view |
+
+Example with Compose:
+```kotlin
+// Track view show
+val homeView = ViewAnalyticsModel("home", type = "main")
 Column(
     modifier = Modifier.trackViewShow(analytics, homeView)
 ) {
-    // Your UI content
+    // UI content
 }
 
-// Track funnel steps
+// Track button tap
+Button(
+    onClick = {
+        trackButtonTap(analytics, "subscribe", homeView, extra = "premium")
+    }
+) {
+    Text("Subscribe")
+}
+
+// Track with funnel
 val onboardingStep1 = ViewAnalyticsModel(
     name = "onboarding_step_1",
     type = "onboarding",
@@ -223,91 +191,147 @@ val onboardingStep1 = ViewAnalyticsModel(
 analytics.track(onboardingStep1)
 ```
 
-### Button Tracking
+### Stuck UI Detection
+
+Track when transient views take too long to load:
 
 ```kotlin
-Button(
-    onClick = {
-        trackButtonTap(analytics, "subscribe", homeView, extra = "premium")
-    }
-) {
-    Text("Subscribe")
-}
+val splashView = ViewAnalyticsModel("splash")
+analytics.track(splashView, stuckTimeout = 5000L) // 5 seconds
 
-// With list index (0-based, sent as 1-based "order")
-Button(
-    onClick = {
-        trackButtonTap(analytics, "select_item", homeView, index = 2) // order=3
-    }
-) {
-    Text("Item #3")
-}
+// After 5s without transitioning:
+// Sends: error reason="stuck on ui_view_show", duration=5.0, view_name="splash"
+
+// When finally transitions (within 30s):
+// Sends: error_corrected reason="stuck on ui_view_show", duration=7.0
 ```
-
-## Phase 4 Usage Examples
 
 ### Error Tracking
 
 ```kotlin
 // Simple error
-analytics.trackErrorEvent(
-    reason = "network_timeout",
-    extraParams = mapOf("endpoint" to "/api/users".toAnalyticsValue())
-)
+analytics.trackErrorEvent("network_timeout")
 
 // Error with exception
 try {
-    // Some operation
+    // operation
 } catch (e: Exception) {
-    analytics.trackErrorEvent(
-        reason = "payment_failed",
-        error = e,
-        extraParams = mapOf("amount" to 9.99.toAnalyticsValue())
-    )
+    analytics.trackErrorEvent("payment_failed", error = e)
 }
 
 // Track correction
-analytics.trackErrorCorrected(
-    reason = "network_timeout",
-    extraParams = mapOf("retry_count" to 3.toAnalyticsValue())
-)
-```
-
-### Stuck UI Detection
-
-```kotlin
-// Track a loading screen with 5-second timeout
-val loadingView = ViewAnalyticsModel("loading", type = "splash")
-analytics.track(loadingView, stuckTimeout = 5000L)
-
-// If view doesn't transition within 5s:
-// - Sends: error reason="stuck on ui_view_show", duration=5.0, view_name="loading", view_type="splash"
-//
-// If it transitions within 30s after stuck:
-// - Sends: error_corrected reason="stuck on ui_view_show", duration=<total_time>
+analytics.trackErrorCorrected("network_timeout")
 ```
 
 ### Permission Tracking
+
+Standardized permission tracking via `ui_view_show`:
 
 ```kotlin
 // Show permission request
 analytics.trackPermissionScreenShow(TAPermissionType.PUSH_NOTIFICATIONS)
 
-// Track user response
-analytics.trackPermissionButtonTap(
-    allowed = true,
-    TAPermissionType.PUSH_NOTIFICATIONS
-)
+// Track response
+analytics.trackPermissionButtonTap(allowed = true, TAPermissionType.PUSH_NOTIFICATIONS)
 
-// Track custom status
-analytics.trackPermissionButtonTap(
-    status = "already_granted",
-    TAPermissionType.LOCATION
-)
-
-// Custom permission type
+// Custom permission
 analytics.trackPermissionScreenShow("bluetooth")
 analytics.trackPermissionButtonTap(allowed = false, "bluetooth")
+```
+
+### Automatically Collected Events
+
+| Event | Parameters | Description |
+| --- | --- | --- |
+| `app_version_update` | `from_version`, `from_build`, `to_version`, `to_build` | Version upgrade detected |
+| `os_version_update` | `from_version`, `to_version` | OS upgrade detected |
+| `app_open` | `is_cold_launch` | App foreground |
+| `app_close` | `view_*`, `funnel_*` | App background with last view info |
+
+### Automatically Set User Properties
+
+| Property | Value | Description |
+| --- | --- | --- |
+| `analytics_version` | String | Analytics standard version |
+| `app_open_count` | Int | Total foreground count |
+| `app_cold_launch_count` | Int | Cold start count |
+
+### Install User Properties
+
+Set once at install, prefixed with `install_`:
+
+| Property | Value | Description |
+| --- | --- | --- |
+| `install_date` | String | ISO 8601 format (YYYY-MM-DD) |
+| `install_version` | String | App version at install |
+| `install_os_version` | String | OS version at install |
+| `install_is_rooted` | Boolean | Root detection at install |
+| `install_ui_appearance` | String | Theme: light, dark, unspecified |
+
+Configure which properties to track:
+```kotlin
+TAAnalyticsConfig(
+    analyticsVersion = "1.0",
+    adaptors = listOf(...),
+    sharedPreferences = prefs,
+    installUserProperties = listOf(
+        UserProperties.INSTALL_DATE,
+        UserProperties.INSTALL_VERSION,
+        UserProperties.INSTALL_OS_VERSION,
+        UserProperties.INSTALL_IS_ROOTED,
+        UserProperties.INSTALL_UI_APPEARANCE
+    )
+)
+```
+
+### Other Standard Events
+
+**Lifecycle:** `onboarding_enter`, `onboarding_exit`, `account_signup_enter`, `account_signup_exit`
+
+**Paywall:** `paywall_enter`, `paywall_purchase_tap`, `paywall_exit`
+
+**Subscriptions:** `subscription_start_intro`, `subscription_start_paid_regular`, `subscription_start_restore`
+
+**Engagement:** `engagement`, `engagement_primary`
+
+See [constants/DefaultConstants.kt](taanalytics/src/main/java/agency/techartists/taanalytics/constants/DefaultConstants.kt) for complete list.
+
+## Configuration
+
+### Event Prefixing
+
+Separate prefixes for automatic vs manual events:
+
+```kotlin
+TAAnalyticsConfig(
+    analyticsVersion = "1.0",
+    adaptors = listOf(...),
+    sharedPreferences = prefs,
+    automaticallyTrackedEventsPrefixConfig = TAAnalyticsConfig.PrefixConfig(
+        eventPrefix = "auto_",
+        userPropertyPrefix = "auto_"
+    ),
+    manuallyTrackedEventsPrefixConfig = TAAnalyticsConfig.PrefixConfig(
+        eventPrefix = "manual_",
+        userPropertyPrefix = "manual_"
+    )
+)
+```
+
+### Event Filtering
+
+Conditionally send events:
+
+```kotlin
+TAAnalyticsConfig(
+    analyticsVersion = "1.0",
+    adaptors = listOf(...),
+    sharedPreferences = prefs,
+    trackEventFilter = { event, params ->
+        // Don't send debug events in production
+        !event.rawValue.contains("debug") || BuildConfig.DEBUG
+    }
+)
 ```
 
 ### User ID Synchronization
@@ -316,154 +340,31 @@ analytics.trackPermissionButtonTap(allowed = false, "bluetooth")
 // Set user ID (propagated to all adaptors)
 analytics.userID = "user_12345"
 
-// Get user ID (from first read-write adaptor)
-val currentUserID = analytics.userID
+// Get user ID
+val userId = analytics.userID
 
 // Get platform pseudo ID (e.g., Firebase App Instance ID)
-val pseudoID = analytics.userPseudoID
+val pseudoId = analytics.userPseudoID
 
 // Clear user ID
 analytics.userID = null
 ```
 
-### Running Tests
+## Installation
 
-```bash
-# Run all unit tests
-./gradlew test
-
-# Run tests for a specific module
-./gradlew :taanalytics:test
-./gradlew :firebase-adaptor:test
-
-# Run specific test class
-./gradlew test --tests "TAAnalyticsBasicTests"
-
-# Run tests with coverage
-./gradlew testDebugUnitTest jacocoTestReport
-```
-
-### Test Files
-
-The library includes comprehensive unit tests:
-
-- **TAAnalyticsBasicTests** (15 tests) - Core functionality: track, set, get, findEvents, clear, userID
-- **TAAnalyticsUITests** (12 tests) - UI tracking: view show, button tap, funnel steps
-- **TAAnalyticsErrorTests** (15 tests) - Error tracking and permission tracking
-
-Total: **42 unit tests** covering all major functionality.
-
-### Quick Start
+Add to your `build.gradle.kts`:
 
 ```kotlin
-import agency.techartists.taanalytics.mock.MockTAAnalytics
-import org.junit.Test
-import org.junit.Assert.*
+dependencies {
+    implementation("agency.techartists:taanalytics:0.1.0")
 
-class MyFeatureTest {
-    @Test
-    fun `button click tracks event`() {
-        val mockAnalytics = MockTAAnalytics()
-        val feature = MyFeature(mockAnalytics)
-
-        feature.onButtonClicked()
-
-        assertEquals(1, mockAnalytics.eventsSent.size)
-        val (event, _) = mockAnalytics.eventsSent[0]
-        assertEquals("button_clicked", event.rawValue)
-    }
+    // Optional adaptors
+    implementation("agency.techartists:taanalytics-firebase:0.1.0")
+    implementation("agency.techartists:taanalytics-mixpanel:0.1.0")
+    implementation("agency.techartists:taanalytics-appsflyer:0.1.0")
 }
 ```
-
-## Firebase Analytics Adaptor
-
-Firebase Analytics integration is available in the `firebase-adaptor` module.
-
-See [firebase-adaptor/README.md](firebase-adaptor/README.md) for detailed setup instructions.
-
-### Quick Setup
-
-```kotlin
-import agency.techartists.taanalytics.firebase.FirebaseAnalyticsAdaptor
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.ktx.Firebase
-
-// Get Firebase Analytics instance
-val firebaseAnalytics = Firebase.analytics
-
-// Create Firebase adaptor
-val firebaseAdaptor = FirebaseAnalyticsAdaptor(firebaseAnalytics)
-
-// Configure TAAnalytics with Firebase
-val config = TAAnalyticsConfig(
-    analyticsVersion = "1.0",
-    adaptors = listOf(firebaseAdaptor),
-    sharedPreferences = getSharedPreferences("TAAnalytics", MODE_PRIVATE)
-)
-
-val analytics = TAAnalytics(applicationContext, config)
-lifecycleScope.launch {
-    analytics.start()
-}
-```
-
-### Features
-
-- ✅ **Automatic Firebase limits handling** - Event names, user properties, and parameters automatically trimmed
-- ✅ **Type conversion** - TAAnalytics types converted to Firebase-compatible types
-- ✅ **User ID sync** - User IDs automatically propagated to Firebase
-- ✅ **Pseudo ID support** - Access Firebase App Instance ID via `analytics.userPseudoID`
-- ✅ **Multi-adaptor support** - Use Firebase alongside other analytics platforms
-
-## External Adaptors
-
-### Available
-- ✅ **Firebase Analytics** - `firebase-adaptor` module (included)
-
-### Future
-- Amplitude adaptor
-- MixPanel adaptor
-- Custom platform adaptors
-
-## Architecture
-
-```
-TAAnalytics
-    ├── Models (type-safe wrappers)
-    ├── Core (main analytics class)
-    ├── Adaptor (platform abstractions)
-    │   ├── LogcatAnalyticsAdaptor
-    │   └── FirebaseAnalyticsAdaptor (firebase-adaptor module)
-    └── Constants (standard events/properties)
-```
-
-## Comparison with iOS Implementation
-
-| Feature | iOS | Android |
-|---------|-----|---------|
-| Basic event tracking | ✅ | ✅ Phase 1 |
-| User properties | ✅ | ✅ Phase 1 |
-| Log conditions | ✅ | ✅ Phase 1 |
-| Multi-adaptor support | ✅ | ✅ Phase 1 |
-| Event/property prefixing | ✅ | ✅ Phase 1 |
-| Event filtering | ✅ | ✅ Phase 1 |
-| Event buffer | ✅ | ✅ Phase 2 |
-| App lifecycle tracking | ✅ | ✅ Phase 2 |
-| Install detection | ✅ | ✅ Phase 2 |
-| App/OS version updates | ✅ | ✅ Phase 2 |
-| Install user properties | ✅ | ✅ Phase 2 |
-| UI tracking | ✅ | ✅ Phase 3 |
-| View/button tracking | ✅ | ✅ Phase 3 |
-| Funnel tracking | ✅ | ✅ Phase 3 |
-| Compose integration | ✅ | ✅ Phase 3 |
-| Error tracking | ✅ | ✅ Phase 4 |
-| Stuck UI detection | ✅ | ✅ Phase 4 |
-| Permission tracking | ✅ | ✅ Phase 4 |
-| User ID sync | ✅ | ✅ Phase 4 |
-| Mock analytics | ✅ | ✅ Phase 5 |
-| Test infrastructure | ✅ | ✅ Phase 5 |
-| Firebase adaptor | ✅ | ✅ Phase 5 |
 
 ## License
 
-MIT License - Copyright (c) 2024 Tech Artists Agency SRL
+MIT License - Copyright (c) 2025 Tech Artists Agency SRL
