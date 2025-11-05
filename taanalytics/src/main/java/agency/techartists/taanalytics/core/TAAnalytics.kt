@@ -239,11 +239,7 @@ class TAAnalytics(
         calculator.calculateAndSetUserProperties()
 
         // Track first open event
-        track(
-            event = Events.OUR_FIRST_OPEN,
-            params = null,
-            logCondition = EventLogCondition.LOG_ONLY_ONCE_PER_LIFETIME
-        )
+        maybeTrackTAFirstOpen { null }
 
         // Mark as no longer first open
         config.sharedPreferences.edit {

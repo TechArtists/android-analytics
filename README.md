@@ -420,6 +420,65 @@ This helps you understand where in your app users are most engaged.
 - **Reading app:** "start chapter", "highlight text", "finish book" (primary)
 - **Social app:** "view profile", "send message", "create post" (primary)
 
+### Install Age Tracking
+
+Query how long users have had your app installed:
+
+```kotlin
+// Get number of 24-hour periods since install
+val relativeDays = analytics.installAgeRelativeDays
+// Returns: 0 (first 24h), 1 (24-48h), 2 (48-72h), etc.
+
+// Get number of calendar days since install (local timezone)
+val calendarDays = analytics.installAgeLocalizedCalendarDays
+// Returns: 0 (same day), 1 (next day), etc.
+// If user installs at 23:59, this becomes 1 at midnight
+
+// Get cold launch count (process starts)
+val launches = analytics.coldLaunchCount
+// Returns: 1 (first launch), 2 (second launch), etc.
+
+// Check if this is the first open ever
+if (analytics.isFirstOpen) {
+    // Show welcome screen
+}
+```
+
+**Difference between relative and calendar days:**
+- `installAgeRelativeDays`: Counts full 24-hour periods (e.g., installed at 2pm, age becomes 1 at 2pm next day)
+- `installAgeLocalizedCalendarDays`: Counts calendar day boundaries in local timezone (e.g., installed at 11pm, age becomes 1 at midnight)
+
+**Use cases:**
+- Cohort analysis by install age
+- Trigger surveys after X days
+- Adjust onboarding for returning vs new users
+
+### Debug Event Tracking
+
+Track temporary debug conditions in production:
+
+```kotlin
+// Simple debug event
+analytics.trackDebugEvent("couldn't find any valid JWT token")
+
+// Debug with additional context
+analytics.trackDebugEvent(
+    reason = "payment flow stuck in unexpected state",
+    extraParams = mapOf(
+        "current_state" to "pending".toAnalyticsValue(),
+        "expected_state" to "completed".toAnalyticsValue(),
+        "transaction_id" to txId.toAnalyticsValue()
+    )
+)
+```
+
+**When to use:**
+- Temporary production debugging (remove after fixing)
+- Tracking unexpected state combinations
+- Investigating user-reported issues
+
+The `debug` event name helps your analytics team filter these temporary events.
+
 ### Automatically Collected Events
 
 | Event | Parameters | Description |
