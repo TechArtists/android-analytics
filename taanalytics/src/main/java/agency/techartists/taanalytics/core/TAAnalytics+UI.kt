@@ -26,6 +26,7 @@ package agency.techartists.taanalytics.core
 import agency.techartists.taanalytics.constants.Events
 import agency.techartists.taanalytics.constants.UserProperties
 import agency.techartists.taanalytics.models.AnalyticsBaseParameterValue
+import agency.techartists.taanalytics.models.AnalyticsViewFunnelStepDetails
 import agency.techartists.taanalytics.models.SecondaryViewAnalyticsModel
 import agency.techartists.taanalytics.models.ViewAnalyticsModel
 import agency.techartists.taanalytics.models.IViewAnalyticsModel
@@ -168,7 +169,7 @@ fun TAAnalytics.trackButtonTap(
  * @param params The map to add parameters to
  * @param prefix Prefix for parameter names (e.g., "view_")
  */
-private fun addViewParameters(
+internal fun addViewParameters(
     view: ViewAnalyticsModel,
     params: MutableMap<String, AnalyticsBaseParameterValue>,
     prefix: String
@@ -231,7 +232,7 @@ private fun parseLastViewShow(formatted: String): ViewAnalyticsModel? {
     val isFinal = parts[5].toBooleanStrictOrNull()
 
     val funnelStep = if (funnelName != null && step != null && isOptional != null && isFinal != null) {
-        agency.techartists.taanalytics.models.AnalyticsViewFunnelStepDetails(
+        AnalyticsViewFunnelStepDetails(
             funnelName = funnelName,
             step = step,
             isOptionalStep = isOptional,

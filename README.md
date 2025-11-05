@@ -318,6 +318,108 @@ analytics.trackSubscriptionRestore(subscription)
 - `PaidPayUpFront` - Intro with pay-up-front
 - `PaidRegular` - No intro offer
 
+### Onboarding Tracking
+
+Track user progression through onboarding:
+
+```kotlin
+// User enters onboarding
+analytics.trackOnboardingEnter()
+
+// Or with additional context
+analytics.trackOnboardingEnter(
+    extraParams = mapOf(
+        "source" to "first_launch".toAnalyticsValue()
+    )
+)
+
+// User completes/exits onboarding
+analytics.trackOnboardingExit()
+
+// Or with completion details
+analytics.trackOnboardingExit(
+    extraParams = mapOf(
+        "completed" to true.toAnalyticsValue(),
+        "steps_shown" to 5.toAnalyticsValue()
+    )
+)
+```
+
+#### Onboarding Events
+
+| Event | Parameters | Description |
+| --- | --- | --- |
+| `onboarding_enter` | Custom parameters via `extraParams` | User enters onboarding |
+| `onboarding_exit` | Custom parameters via `extraParams` | User exits/completes onboarding |
+
+### Account Signup Tracking
+
+Track signup funnel with method attribution:
+
+```kotlin
+// User enters signup flow
+analytics.trackAccountSignupEnter(
+    method = TASignupMethodType.Google
+)
+
+// Or defer method selection
+analytics.trackAccountSignupEnter()
+
+// User completes signup
+analytics.trackAccountSignupExit(
+    method = TASignupMethodType.Email,
+    extraParams = mapOf(
+        "newsletter_opted_in" to true.toAnalyticsValue()
+    )
+)
+```
+
+#### Account Signup Events
+
+| Event | Parameters | Description |
+| --- | --- | --- |
+| `account_signup_enter` | `method?`, custom via `extraParams` | User enters signup flow |
+| `account_signup_exit` | `method`, custom via `extraParams` | User completes signup |
+
+**Signup Methods:**
+- `Email` - Email-based signup
+- `Apple` - Apple Sign In
+- `Google` - Google Sign In
+- `Facebook` - Facebook Sign In
+- `Custom("method")` - Custom signup method
+
+### Engagement Tracking
+
+Track meaningful user actions with automatic view context:
+
+```kotlin
+// Track general engagement
+analytics.trackEngagement("start_workout")
+analytics.trackEngagement("log_set")
+
+// Track primary engagement (key success metric)
+analytics.trackEngagementPrimary("complete_workout")
+// This sends both 'engagement' AND 'engagement_primary' events
+```
+
+The engagement events automatically include context from the last view shown:
+- `view_name`, `view_type`
+- `view_funnel_name`, `view_funnel_step`, etc.
+
+This helps you understand where in your app users are most engaged.
+
+#### Engagement Events
+
+| Event | Parameters | Description |
+| --- | --- | --- |
+| `engagement` | `name`, `view_*` (auto-added) | General engagement action |
+| `engagement_primary` | `name`, `view_*` (auto-added) | Primary engagement action (also sends `engagement`) |
+
+**Examples by App Type:**
+- **Fitness app:** "start workout", "log set", "complete workout" (primary)
+- **Reading app:** "start chapter", "highlight text", "finish book" (primary)
+- **Social app:** "view profile", "send message", "create post" (primary)
+
 ### Automatically Collected Events
 
 | Event | Parameters | Description |
