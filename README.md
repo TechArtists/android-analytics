@@ -596,12 +596,12 @@ Add to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("agency.techartists:taanalytics:0.1.0")
+    implementation("com.github.TechArtists.android-analytics:taanalytics:0.2")
 
     // Optional adaptors
-    implementation("agency.techartists:taanalytics-firebase:0.1.0")
-    implementation("agency.techartists:taanalytics-mixpanel:0.1.0")
-    implementation("agency.techartists:taanalytics-appsflyer:0.1.0")
+    implementation("com.github.TechArtists.android-analytics:taanalytics-firebase:0.2")
+    implementation("com.github.TechArtists.android-analytics:taanalytics-mixpanel:0.2")
+    implementation("com.github.TechArtists.android-analytics:taanalytics-appsflyer:0.2")
 }
 ```
 
