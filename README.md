@@ -151,7 +151,8 @@ Instead of many events like `foo_clicked`, `shown_bar`, this library uses 2 gene
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `name` | String | Symbolic button name (not localized text) |
-| `extra` | String? | Additional context |
+| `detail` | String? | Any extra detail you would like to attach to this button tap. For example, the response during an onboarding question (e.g. name = Continue, detail = female) |
+| `is_default_detail` | Boolean? | If the detail was already pre-selected (e.g. male was already checked) or if the user had to explicitly select it |
 | `order` | Int? | Button order in list (1-based) |
 | `view_name` | String | Parent view name |
 | `view_type` | String? | Parent view type |
@@ -171,7 +172,7 @@ Column(
 // Track button tap
 Button(
     onClick = {
-        trackButtonTap(analytics, "subscribe", homeView, extra = "premium")
+        trackButtonTap(analytics, "subscribe", homeView, detail = "premium")
     }
 ) {
     Text("Subscribe")

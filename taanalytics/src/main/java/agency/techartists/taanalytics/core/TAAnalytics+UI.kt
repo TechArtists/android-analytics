@@ -112,20 +112,25 @@ fun TAAnalytics.track(secondaryView: SecondaryViewAnalyticsModel) {
  *
  * Parameters sent:
  * - name: String (button name)
- * - extra: String? (if provided)
+ * - detail: String? (if provided)
+ * - is_default_detail: Boolean? (if provided)
  * - order: Int? (1-based, if index provided)
  * - view_{name, type, funnel_*}: from parent view (prefixed with "view_")
  * - secondary_view_{name, type}: if tapped on secondary view
  *
  * @param symbolicName Symbolic name of the button (not localized text)
  * @param onView The view where the button was tapped
- * @param extra Optional extra information (e.g., selected item, plan ID)
+ * @param detail Optional extra detail to attach to this button tap. For example, the response
+ *               during an onboarding question (e.g. name = Continue, detail = female)
+ * @param isDefaultDetail Optional flag indicating if the detail was already pre-selected
+ *                        (e.g. male was already checked) or if the user had to explicitly select it
  * @param index Optional 0-based index (will be sent as 1-based "order")
  */
 fun TAAnalytics.trackButtonTap(
     symbolicName: String,
     onView: IViewAnalyticsModel,
-    extra: String? = null,
+    detail: String? = null,
+    isDefaultDetail: Boolean? = null,
     index: Int? = null
 ) {
     val params = mutableMapOf<String, AnalyticsBaseParameterValue>()
@@ -133,7 +138,8 @@ fun TAAnalytics.trackButtonTap(
     // Add button parameters
     params["name"] = symbolicName.toAnalyticsValue()
     index?.let { params["order"] = (it + 1).toAnalyticsValue() } // Convert to 1-based
-    extra?.let { params["extra"] = it.toAnalyticsValue() }
+    detail?.let { params["detail"] = it.toAnalyticsValue() }
+    isDefaultDetail?.let { params["is_default_detail"] = it.toAnalyticsValue() }
 
     // Add view context parameters
     when (onView) {
