@@ -83,22 +83,27 @@ fun Modifier.trackViewShow(
  *
  * @param analytics TAAnalytics instance
  * @param buttonName Symbolic name of the button
- * @param onView View where the button is located
- * @param extra Optional extra information
- * @param index Optional 0-based index for list items
+ * @param onView The view where the button was tapped
+ * @param detail Optional extra detail to attach to this button tap. For example, the response
+ *               during an onboarding question (e.g. name = Continue, detail = female)
+ * @param isDefaultDetail Optional flag indicating if the detail was already pre-selected
+ *                        (e.g. male was already checked) or if the user had to explicitly select it
+ * @param index Optional 0-based index (will be sent as 1-based "order")
  */
 fun trackButtonTap(
     analytics: TAAnalytics,
     buttonName: String,
     onView: IViewAnalyticsModel,
-    extra: String? = null,
+    detail: String? = null,
+    isDefaultDetail: Boolean? = null,
     index: Int? = null
 ) {
     analytics.trackButtonTap(
-        buttonName,
-        onView,
-        extra,
-        index
+        symbolicName = buttonName,
+        onView = onView,
+        detail = detail,
+        isDefaultDetail = isDefaultDetail,
+        index = index
     )
 }
 

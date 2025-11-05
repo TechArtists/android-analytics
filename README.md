@@ -240,6 +240,84 @@ analytics.trackPermissionScreenShow("bluetooth")
 analytics.trackPermissionButtonTap(allowed = false, "bluetooth")
 ```
 
+### Paywall Tracking
+
+Track paywall interactions with rich context:
+
+```kotlin
+// Define paywall
+val paywall = TAPaywallAnalyticsImpl(
+    analyticsPlacement = "onboarding_finish",
+    analyticsID = "paywall_v2",
+    analyticsName = "Premium Features"
+)
+
+// Track paywall shown
+analytics.trackPaywallEnter(paywall)
+// Sends: paywall_show event + ui_view_show with name="paywall", type="onboarding_finish"
+
+// Track purchase button tap
+analytics.trackPaywallPurchaseTap(
+    buttonName = "Subscribe Now",
+    productIdentifier = "premium_monthly",
+    paywall = paywall
+)
+// Sends: paywall_purchase_tap event + ui_button_tap event
+
+// Track paywall exit
+analytics.trackPaywallExit(paywall, TAPaywallExitReason.ClosedPaywall)
+// Or other reasons: NewSubscription, RestoredSubscription, CancelledPaymentConfirmation
+```
+
+#### Paywall Events
+
+| Event | Parameters | Description |
+| --- | --- | --- |
+| `paywall_show` | `placement`, `id?`, `name?` | Paywall displayed |
+| `paywall_exit` | `placement`, `id?`, `name?`, `reason` | Paywall dismissed |
+| `paywall_purchase_tap` | `button_name`, `product_id`, `placement`, `paywall_id?`, `paywall_name?` | Purchase initiated |
+
+### Subscription Tracking
+
+Track subscription starts and restores:
+
+```kotlin
+// Define subscription
+val subscription = TASubscriptionStartAnalyticsImpl(
+    subscriptionType = TASubscriptionType.Trial,
+    paywall = paywall,
+    productID = "premium_monthly",
+    price = 9.99f,
+    currency = "USD"
+)
+
+// Track intro subscription (trial, pay-as-you-go, pay-up-front)
+analytics.trackSubscriptionStartIntro(subscription)
+// Sends: subscription_start_intro + subscription_start_new events
+
+// Track regular paid subscription (no intro offer)
+analytics.trackSubscriptionStartPaidRegular(subscription)
+// Sends: subscription_start_paid_regular + subscription_start_new events
+
+// Track subscription restore
+analytics.trackSubscriptionRestore(subscription)
+```
+
+#### Subscription Events
+
+| Event | Parameters | Description |
+| --- | --- | --- |
+| `subscription_start_intro` | `product_id`, `type`, `placement`, `value`, `price`, `currency`, `quantity`, `paywall_id?`, `paywall_name?` | Subscription with intro offer |
+| `subscription_start_paid_regular` | Same as above | Regular paid subscription |
+| `subscription_start_new` | Same as above | Any new subscription (sent automatically) |
+| `subscription_restore` | Same as above | Restored subscription |
+
+**Subscription Types:**
+- `Trial` - Free trial period
+- `PaidPayAsYouGo` - Intro with pay-as-you-go
+- `PaidPayUpFront` - Intro with pay-up-front
+- `PaidRegular` - No intro offer
+
 ### Automatically Collected Events
 
 | Event | Parameters | Description |
