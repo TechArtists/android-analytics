@@ -96,6 +96,15 @@ object Events {
 
     /** Subscription restored */
     val SUBSCRIPTION_RESTORE = EventAnalyticsModel("subscription_restore", isInternalEvent = true)
+
+    /** One-time non-consumable purchase completed */
+    val PURCHASE_NON_CONSUMABLE_ONE_TIME = EventAnalyticsModel("purchase_non_consumable_one_time", isInternalEvent = true)
+
+    /** Consumable purchase completed */
+    val PURCHASE_CONSUMABLE = EventAnalyticsModel("purchase_consumable", isInternalEvent = true)
+
+    /** New purchase completed */
+    val PURCHASE_NEW = EventAnalyticsModel("purchase_new", isInternalEvent = true)
 }
 
 /**

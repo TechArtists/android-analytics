@@ -318,6 +318,50 @@ analytics.trackSubscriptionRestore(subscription)
 - `PaidPayUpFront` - Intro with pay-up-front
 - `PaidRegular` - No intro offer
 
+### Purchase Tracking
+
+Track consumable and non-consumable purchases:
+
+```kotlin
+// Define non-consumable one-time purchase
+val oneTimePurchase = TAPurchaseAnalyticsImpl(
+    purchaseType = TAPurchaseType.NonConsumableOneTime,
+    paywall = paywall,
+    productID = "premium_lifetime",
+    price = 49.99f,
+    currency = "USD"
+)
+
+// Track non-consumable one-time purchase
+analytics.trackPurchaseNonConsumableOneTime(oneTimePurchase)
+// Sends: purchase_non_consumable_one_time + purchase_new events
+
+// Define consumable purchase
+val consumablePurchase = TAPurchaseAnalyticsImpl(
+    purchaseType = TAPurchaseType.Consumable,
+    paywall = paywall,
+    productID = "coins_100",
+    price = 1.99f,
+    currency = "USD"
+)
+
+// Track consumable purchase
+analytics.trackPurchaseConsumable(consumablePurchase)
+// Sends: purchase_consumable + purchase_new events
+```
+
+#### Purchase Events
+
+| Event | Parameters | Description |
+| --- | --- | --- |
+| `purchase_non_consumable_one_time` | `product_id`, `type`, `placement`, `value`, `price`, `currency`, `quantity`, `paywall_id?`, `paywall_name?` | One-time non-consumable purchase |
+| `purchase_consumable` | Same as above | Consumable purchase |
+| `purchase_new` | Same as above | Any new purchase (sent automatically) |
+
+**Purchase Types:**
+- `NonConsumableOneTime` - One-time non-consumable purchase
+- `Consumable` - Consumable purchase
+
 ### Onboarding Tracking
 
 Track user progression through onboarding:
@@ -530,7 +574,9 @@ TAAnalyticsConfig(
 
 **Paywall:** `paywall_enter`, `paywall_purchase_tap`, `paywall_exit`
 
-**Subscriptions:** `subscription_start_intro`, `subscription_start_paid_regular`, `subscription_start_restore`
+**Subscriptions:** `subscription_start_intro`, `subscription_start_paid_regular`, `subscription_restore`
+
+**Purchases:** `purchase_non_consumable_one_time`, `purchase_consumable`, `purchase_new`
 
 **Engagement:** `engagement`, `engagement_primary`
 
