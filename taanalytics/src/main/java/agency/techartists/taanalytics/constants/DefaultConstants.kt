@@ -77,7 +77,7 @@ object Events {
     val ACCOUNT_SIGNUP_EXIT = EventAnalyticsModel("account_signup_exit", isInternalEvent = true)
 
     /** Paywall shown. Parameters: `placement`, `id` (optional) */
-    val PAYWALL_ENTER = EventAnalyticsModel("paywall_show", isInternalEvent = true)
+    val PAYWALL_ENTER = EventAnalyticsModel("paywall_enter", isInternalEvent = true)
 
     /** Paywall dismissed. Parameters: `placement`, `id` (optional) */
     val PAYWALL_EXIT = EventAnalyticsModel("paywall_exit", isInternalEvent = true)
